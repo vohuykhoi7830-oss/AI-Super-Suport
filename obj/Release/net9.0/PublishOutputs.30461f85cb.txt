@@ -1,0 +1,8 @@
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\knowlegle.exe
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\appsettings.Development.json
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\appsettings.json
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\knowlegle.dll
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\knowlegle.deps.json
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\knowlegle.runtimeconfig.json
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\knowlegle.pdb
+d:\Knowlegle\knowlegle\bin\Release\net9.0\publish\Newtonsoft.Json.dll

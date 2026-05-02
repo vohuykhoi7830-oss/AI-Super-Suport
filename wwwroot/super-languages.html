@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Languages — AI Learning Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060812;--bg2:#0d1020;--bg3:#141828;--bg4:#1c2238;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --accent:#4F6EF7;--accent2:#7C3AED;--accent3:#06B6D4;--accent4:#10B981;
+  --warn:#F59E0B;--danger:#EF4444;--success:#10B981;
+  --text:#F0F2FF;--text2:#8B90B8;--text3:#4B5280;
+  --r:12px;--r2:20px;--r3:8px;
+  --font:'Outfit',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+button{cursor:pointer;font-family:var(--font);border:none;outline:none}
+input,textarea,select{font-family:var(--font);outline:none}
+a{color:var(--accent);text-decoration:none}
+
+/* ─── ANIMATED BACKGROUND ─── */
+.bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.12;animation:orbFloat 20s ease-in-out infinite}
+.bg-orb:nth-child(1){width:600px;height:600px;background:var(--accent);top:-200px;left:-100px;animation-delay:0s}
+.bg-orb:nth-child(2){width:500px;height:500px;background:var(--accent2);bottom:-150px;right:-100px;animation-delay:-7s}
+.bg-orb:nth-child(3){width:400px;height:400px;background:var(--accent3);top:40%;left:50%;animation-delay:-14s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,30px) scale(0.95)}}
+
+/* ─── GRID OVERLAY ─── */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(79,110,247,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(79,110,247,0.04) 1px,transparent 1px);background-size:48px 48px}
+
+/* ─── LAYOUT ─── */
+.app{position:relative;z-index:1;display:flex;min-height:100vh}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:80px;background:rgba(13,16,32,0.8);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 0;gap:6px;
+  position:sticky;top:0;height:100vh;
+  backdrop-filter:blur(20px);
+  flex-shrink:0;
+}
+.logo-mark{
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(79,110,247,0.4);
+  animation:logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse{0%,100%{box-shadow:0 4px 20px rgba(79,110,247,0.4)}50%{box-shadow:0 4px 32px rgba(79,110,247,0.7)}}
+.logo-mark svg{position:relative;z-index:1}
+.logo-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,0.15));animation:shimmer 3s linear infinite}
+@keyframes shimmer{0%{transform:translateX(-100%) rotate(45deg)}100%{transform:translateX(200%) rotate(45deg)}}
+
+.nav-btn{
+  width:56px;height:56px;border-radius:var(--r);
+  background:transparent;color:var(--text3);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;
+}
+.nav-btn:hover{background:rgba(79,110,247,0.08);color:var(--text2);transform:scale(1.05)}
+.nav-btn.active{background:rgba(79,110,247,0.15);color:var(--accent)}
+.nav-btn.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-icon{font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center}
+.nav-label{font-size:9.5px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase}
+
+/* ─── MAIN ─── */
+.main{flex:1;padding:32px 40px;max-width:1100px;overflow-y:auto}
+.section{display:none;animation:fadeUp 0.35s cubic-bezier(0.34,1.2,0.64,1)}
+.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ─── HERO HEADER ─── */
+.page-hero{margin-bottom:40px;position:relative}
+.page-hero::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:100px;border:1px solid rgba(79,110,247,0.3);background:rgba(79,110,247,0.08);color:#8BA4FF;font-size:11.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:18px;animation:eyebrowIn 0.5s ease}
+@keyframes eyebrowIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:dotPulse 2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
+.page-title{font-size:clamp(36px,4vw,54px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:10px}
+.page-title .hl{background:linear-gradient(90deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-subtitle{color:var(--text2);font-size:15px;font-weight:400}
+.page-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--r3);font-size:14px;font-weight:600;transition:all 0.2s;white-space:nowrap;letter-spacing:-0.01em}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 16px rgba(79,110,247,0.35)}
+.btn-primary:hover{background:#3d5ce8;transform:translateY(-1px);box-shadow:0 4px 24px rgba(79,110,247,0.5)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2)}
+.btn-danger{background:rgba(239,68,68,0.15);color:#FCA5A5;border:1px solid rgba(239,68,68,0.2)}
+.btn-success{background:rgba(16,185,129,0.15);color:#6EE7B7;border:1px solid rgba(16,185,129,0.2)}
+.btn-sm{padding:7px 14px;font-size:13px}
+.btn-lg{padding:14px 32px;font-size:16px;border-radius:var(--r)}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{width:36px;height:36px;padding:0;justify-content:center;border-radius:var(--r3)}
+
+/* ─── CARDS / PANELS ─── */
+.card{background:rgba(13,16,32,0.7);border:1px solid var(--border);border-radius:var(--r2);padding:24px;backdrop-filter:blur(12px);transition:border-color 0.2s}
+.card:hover{border-color:var(--border2)}
+.card-sm{padding:16px;border-radius:var(--r)}
+.card-accent{border-color:rgba(79,110,247,0.2);background:linear-gradient(135deg,rgba(79,110,247,0.05),rgba(13,16,32,0.7))}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.panel-title{font-size:15px;font-weight:700;letter-spacing:-0.02em}
+
+/* ─── STATS GRID ─── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:32px;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.stat-item{padding:24px;border-right:1px solid var(--border);text-align:center;position:relative;transition:background 0.2s}
+.stat-item:last-child{border-right:none}
+.stat-item:hover{background:rgba(79,110,247,0.04)}
+.stat-num{font-size:36px;font-weight:900;letter-spacing:-2px;font-family:var(--font);background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-num.accent{background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text}
+.stat-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-top:4px}
+
+/* ─── DASHBOARD METRIC CARDS ─── */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.metric-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;align-items:center;gap:16px;transition:all 0.25s cubic-bezier(0.34,1.2,0.64,1);position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--card-color,var(--accent));opacity:0.6}
+.metric-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 12px 32px rgba(0,0,0,0.4)}
+.metric-icon{font-size:24px;width:48px;height:48px;border-radius:var(--r3);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);flex-shrink:0}
+.metric-val{font-size:28px;font-weight:900;letter-spacing:-1px;line-height:1}
+.metric-lbl{font-size:12px;color:var(--text2);margin-top:2px;font-weight:500}
+
+/* ─── FORM ─── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em}
+.input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 14px;font-size:14px;transition:all 0.2s}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,110,247,0.12)}
+.input::placeholder{color:var(--text3)}
+.textarea{resize:vertical;min-height:80px}
+.select{appearance:none;background:var(--bg3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B90B8' fill='none' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 36px 10px 14px;font-size:14px;cursor:pointer}
+.select:focus{border-color:var(--accent)}
+
+/* ─── DROPZONE ─── */
+.dropzone{border:2px dashed var(--border2);border-radius:var(--r2);padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.25s;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden}
+.dropzone:hover,.dropzone.dragging{border-color:var(--accent);background:rgba(79,110,247,0.04)}
+.dropzone-icon{width:64px;height:64px;border-radius:20px;background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px;animation:iconFloat 3s ease-in-out infinite}
+@keyframes iconFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.dropzone h3{font-size:16px;font-weight:700}
+.dropzone p{color:var(--text2);font-size:13px}
+.dropzone small{color:var(--text3);font-size:12px}
+
+/* ─── WORD CARDS ─── */
+.word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.word-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:all 0.25s cubic-bezier(0.34,1.2,0.64,1);position:relative}
+.word-card::after{content:'';position:absolute;bottom:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity 0.2s}
+.word-card:hover{border-color:rgba(79,110,247,0.3);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.4)}
+.word-card:hover::after{opacity:0.4}
+.wc-word{font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
+.wc-pron{color:var(--accent3);font-family:var(--mono);font-size:12px;margin-bottom:8px}
+.wc-meaning{font-size:14px;color:var(--text);margin-bottom:10px;line-height:1.5}
+.wc-example{font-size:12.5px;color:var(--text2);font-style:italic;border-left:2px solid var(--border2);padding-left:8px;line-height:1.5}
+.wc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.wc-tag{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;background:rgba(79,110,247,0.12);color:#8BA4FF;border:1px solid rgba(79,110,247,0.15)}
+.wc-actions{display:flex;gap:6px}
+.icon-btn{width:30px;height:30px;border-radius:var(--r3);background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text2);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s}
+.icon-btn:hover{background:rgba(255,255,255,0.08);color:var(--text)}
+
+/* ─── QUIZ ─── */
+.quiz-setup{max-width:600px;margin:0 auto}
+.quiz-types{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.quiz-type-btn{padding:20px;border-radius:var(--r);background:var(--bg3);border:2px solid var(--border);display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;color:var(--text);transition:all 0.2s;cursor:pointer}
+.quiz-type-btn:hover{border-color:rgba(79,110,247,0.3);background:rgba(79,110,247,0.04)}
+.quiz-type-btn.active{border-color:var(--accent);background:rgba(79,110,247,0.08)}
+.qt-icon{font-size:24px}
+.qt-name{font-size:14px;font-weight:700}
+.qt-desc{font-size:12px;color:var(--text2)}
+
+.quiz-active{max-width:640px;margin:0 auto}
+.quiz-progress-wrap{height:3px;background:var(--bg3);border-radius:2px;margin-bottom:16px;overflow:hidden}
+.quiz-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:2px;transition:width 0.4s ease}
+.quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:13px;color:var(--text2)}
+.quiz-score-badge{background:rgba(16,185,129,0.12);color:#6EE7B7;border:1px solid rgba(16,185,129,0.2);padding:4px 12px;border-radius:100px;font-weight:700;font-size:13px}
+
+.quiz-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:36px;margin-bottom:16px;min-height:300px}
+.quiz-q-hint{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:10px}
+.quiz-question{font-size:26px;font-weight:800;letter-spacing:-1px;margin-bottom:28px;line-height:1.2}
+.quiz-answers{display:flex;flex-direction:column;gap:10px}
+.answer-btn{padding:14px 18px;border-radius:var(--r3);background:var(--bg3);border:1px solid var(--border);color:var(--text);text-align:left;font-size:14px;font-weight:500;transition:all 0.2s;cursor:pointer;line-height:1.4}
+.answer-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(79,110,247,0.06);transform:translateX(3px)}
+.answer-btn.correct{background:rgba(16,185,129,0.12);border-color:var(--success);color:#6EE7B7}
+.answer-btn.wrong{background:rgba(239,68,68,0.08);border-color:var(--danger);color:#FCA5A5}
+.answer-btn.reveal{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.4);color:#6EE7B7}
+
+.typing-input{width:100%;font-size:18px;font-weight:600;padding:14px 18px;background:var(--bg3);border:2px solid var(--border2);border-radius:var(--r3);color:var(--text)}
+.typing-input:focus{border-color:var(--accent)}
+
+.quiz-feedback{margin-top:16px;padding:14px 18px;border-radius:var(--r3);font-size:14px;font-weight:500;line-height:1.5}
+.fb-correct{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
+.fb-wrong{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);color:#FCA5A5}
+
+/* ─── RESULT ─── */
+.result-wrap{max-width:480px;margin:0 auto;text-align:center;padding:48px 0}
+.result-ring{width:140px;height:140px;border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;letter-spacing:-2px;position:relative;transition:all 0.5s}
+.result-ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(var(--accent) var(--pct,0%),var(--bg3) 0%);animation:ringIn 1s ease forwards}
+.result-ring::after{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--bg2)}
+.result-ring span{position:relative;z-index:1}
+@keyframes ringIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:none}}
+.result-actions{display:flex;gap:12px;justify-content:center;margin-top:24px}
+
+/* ─── AI ANALYSIS (in quiz) ─── */
+.ai-analysis{margin-top:24px;background:var(--bg2);border:1px solid rgba(79,110,247,0.2);border-radius:var(--r);padding:20px;text-align:left;font-size:14px;line-height:1.8}
+.ai-analysis-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-weight:700;color:#8BA4FF}
+
+/* ─── AI CHAT ─── */
+.ai-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;margin-bottom:16px}
+.chat-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);height:480px;display:flex;flex-direction:column;overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.chat-welcome{text-align:center;padding:40px 20px;color:var(--text2)}
+.chat-welcome-icon{font-size:40px;margin-bottom:12px}
+.chat-welcome h3{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+.msg{display:flex;flex-direction:column;gap:3px;max-width:82%}
+.msg-user{align-self:flex-end;align-items:flex-end}
+.msg-ai{align-self:flex-start}
+.msg-bubble{padding:11px 15px;border-radius:14px;font-size:14px;line-height:1.6;word-break:break-word}
+.msg-user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg-ai .msg-bubble{background:var(--bg3);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg-time{font-size:11px;color:var(--text3)}
+.chat-input-row{padding:14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.chat-input-row .input{flex:1}
+
+/* ─── AI BAR (quick bar) ─── */
+.ai-quick-bar{
+  position:fixed;bottom:0;left:80px;right:0;z-index:100;
+  background:rgba(9,11,22,0.92);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  padding:10px 40px;
+  display:flex;align-items:center;gap:10px;
+  animation:barIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes barIn{from{transform:translateY(100%)}to{transform:none}}
+.ai-bar-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;animation:iconSpin 4s linear infinite}
+@keyframes iconSpin{0%,100%{filter:hue-rotate(0deg)}50%{filter:hue-rotate(30deg)}}
+.ai-bar-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);color:var(--text);padding:8px 14px;font-size:13px}
+.ai-bar-input:focus{border-color:var(--accent)}
+.ai-bar-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap}
+
+/* ─── FLASHCARD ─── */
+.fc-wrap{max-width:580px;margin:0 auto}
+.fc-card{height:260px;perspective:1200px;cursor:pointer;margin-bottom:20px}
+.fc-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.4,0,0.2,1)}
+.fc-inner.flipped{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;text-align:center}
+.fc-front{background:linear-gradient(135deg,var(--bg2),rgba(79,110,247,0.06));border-color:rgba(79,110,247,0.15)}
+.fc-back{background:linear-gradient(135deg,rgba(6,182,212,0.06),var(--bg2));border-color:rgba(6,182,212,0.15);transform:rotateY(180deg)}
+.fc-word{font-size:32px;font-weight:900;letter-spacing:-1.5px}
+.fc-pron{font-family:var(--mono);color:var(--accent3);font-size:14px}
+.fc-hint{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em}
+.fc-controls{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fc-rate-btns{display:flex;gap:8px}
+.fc-meta{font-size:13px;color:var(--text2)}
+
+/* ─── UPLOAD SECTION ─── */
+.upload-grid{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
+.file-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.file-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border-radius:var(--r3);border:1px solid var(--border);font-size:13px}
+.file-item-icon{font-size:20px}
+.file-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-item-size{color:var(--text3);font-size:11px}
+
+/* ─── VOICE BTN ─── */
+.voice-btn{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;border:none;cursor:pointer;box-shadow:0 4px 24px rgba(79,110,247,0.4);transition:all 0.2s}
+.voice-btn:hover{transform:scale(1.06)}
+.voice-btn.recording{background:linear-gradient(135deg,var(--danger),#ff8888);animation:recPulse 1s ease-in-out infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 16px rgba(239,68,68,0)}}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:80px;right:24px;z-index:9999;background:var(--bg4);color:var(--text);padding:12px 18px;border-radius:var(--r3);font-size:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateX(120%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);border-left:3px solid var(--accent);max-width:320px;font-weight:500}
+.toast.show{transform:translateX(0)}
+.toast.success{border-color:var(--success)}
+.toast.error{border-color:var(--danger)}
+
+/* ─── DOC ANALYSIS RESULT ─── */
+.doc-result{margin-top:20px}
+.solution-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.solution-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:background 0.15s}
+.solution-header:hover{background:rgba(79,110,247,0.03)}
+.sol-num{width:28px;height:28px;border-radius:8px;background:rgba(79,110,247,0.15);color:#8BA4FF;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sol-q{font-size:14px;font-weight:600;flex:1;line-height:1.4}
+.sol-tag{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;flex-shrink:0}
+.sol-body{padding:16px 18px;display:none;border-top:1px solid var(--border)}
+.sol-body.open{display:block}
+.sol-answer{font-size:15px;font-weight:700;color:#6EE7B7;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sol-explanation{font-size:13.5px;color:var(--text2);line-height:1.7}
+.sol-steps{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.sol-step{display:flex;gap:10px;font-size:13px;line-height:1.5}
+.step-num{width:20px;height:20px;border-radius:50%;background:rgba(79,110,247,0.15);color:#8BA4FF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+
+/* ─── SHARE MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:32px;max-width:480px;width:calc(100% - 48px);animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:none}}
+.modal h2{font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px}
+.modal p{color:var(--text2);font-size:14px;margin-bottom:20px}
+.share-url{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);padding:12px 16px;font-family:var(--mono);font-size:12px;color:var(--accent3);word-break:break-all;margin-bottom:16px}
+.share-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.share-step{display:flex;gap:12px;align-items:flex-start;font-size:14px}
+.share-step-num{width:24px;height:24px;border-radius:50%;background:rgba(79,110,247,0.15);color:#8BA4FF;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.share-step p{color:var(--text2);line-height:1.5;font-family:var(--mono);font-size:12px}
+.share-step code{color:var(--accent3)}
+
+/* ─── EMPTY STATE ─── */
+.empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:56px 20px;color:var(--text2);text-align:center}
+.empty-icon{font-size:48px;opacity:0.3}
+.empty p{font-size:14px}
+
+/* ─── SEARCH BAR ─── */
+.search-wrap{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.search-input{flex:1;min-width:180px;max-width:280px}
+
+/* ─── LOADING ─── */
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-dots::after{content:'';animation:dots 1.5s infinite}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+
+/* ─── NGROK INFO ─── */
+.ngrok-tip{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:var(--r);padding:16px;font-size:13px;color:var(--text2);line-height:1.7}
+.ngrok-tip code{color:var(--accent3);font-family:var(--mono);background:rgba(6,182,212,0.08);padding:2px 6px;border-radius:4px}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  .upload-grid{grid-template-columns:1fr}
+  .ai-layout{grid-template-columns:1fr}
+  .main{padding:20px}
+  .form-row{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:1fr}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border)}
+  .stat-item:last-child{border-bottom:none}
+}
+@media(max-width:600px){
+  .sidebar{width:60px}
+  .nav-label{display:none}
+  .page-title{font-size:32px}
+  .quiz-types{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:1fr}
+  .main{padding-bottom:100px}
+  .ai-quick-bar{left:60px;padding:10px 16px}
+}
+
+/* ─── SCROLLBAR GLOBAL ─── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+<div class="bg-grid"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 8C6 6.9 6.9 6 8 6h12c1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V8z" fill="rgba(255,255,255,0.9)"/>
+        <path d="M6 17c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2v-3z" fill="rgba(255,255,255,0.6)"/>
+        <path d="M18 17c0-1.1.9-2 2-2 1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2-1.1 0-2-.9-2-2v-3z" fill="rgba(255,255,255,0.85)"/>
+      </svg>
+    </div>
+    <button class="nav-btn active" onclick="nav('dashboard')" data-s="dashboard">
+      <span class="nav-icon">⊞</span><span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" onclick="nav('vocab')" data-s="vocab">
+      <span class="nav-icon">📚</span><span class="nav-label">Vocab</span>
+    </button>
+    <button class="nav-btn" onclick="nav('upload')" data-s="upload">
+      <span class="nav-icon">⬆</span><span class="nav-label">Add</span>
+    </button>
+    <button class="nav-btn" onclick="nav('quiz')" data-s="quiz">
+      <span class="nav-icon">✎</span><span class="nav-label">Quiz</span>
+    </button>
+    <button class="nav-btn" onclick="nav('doctest')" data-s="doctest">
+      <span class="nav-icon">📄</span><span class="nav-label">Doc</span>
+    </button>
+    <button class="nav-btn" onclick="nav('ai')" data-s="ai">
+      <span class="nav-icon">✦</span><span class="nav-label">AI</span>
+    </button>
+    <button class="nav-btn" onclick="nav('flashcard')" data-s="flashcard">
+      <span class="nav-icon">🃏</span><span class="nav-label">Cards</span>
+    </button>
+    <button class="nav-btn" style="margin-top:auto" onclick="showShareModal()">
+      <span class="nav-icon">⇗</span><span class="nav-label">Share</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" style="padding-bottom:80px">
+
+    <!-- ── DASHBOARD ── -->
+    <section id="s-dashboard" class="section active">
+      <div class="page-hero">
+        <div class="hero-eyebrow"><div class="hero-dot"></div>Super Languages Platform</div>
+        <h1 class="page-title"><span class="hl">Super</span> Languages</h1>
+        <p class="page-subtitle">Nền tảng học ngôn ngữ AI thế hệ mới · Cá nhân hóa · Thông minh · Hiệu quả</p>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-lg" onclick="nav('upload')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Thêm từ vựng
+          </button>
+          <button class="btn btn-ghost btn-lg" onclick="nav('quiz')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Luyện tập ngay
+          </button>
+          <button class="btn btn-ghost btn-lg" onclick="nav('doctest')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Upload & Test
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item"><div class="stat-num accent" id="d-total">0</div><div class="stat-label">Tổng từ vựng</div></div>
+        <div class="stat-item"><div class="stat-num accent" id="d-sets">0</div><div class="stat-label">Bộ từ vựng</div></div>
+        <div class="stat-item"><div class="stat-num" id="d-streak">0</div><div class="stat-label">Ngày liên tiếp 🔥</div></div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card" style="--card-color:#4F6EF7">
+          <div class="metric-icon">📖</div>
+          <div><div class="metric-val" id="m-total">0</div><div class="metric-lbl">Tổng từ đã thêm</div></div>
+        </div>
+        <div class="metric-card" style="--card-color:#10B981">
+          <div class="metric-icon">✅</div>
+          <div><div class="metric-val" id="m-mastered">0</div><div class="metric-lbl">Đã thành thạo</div></div>
+        </div>
+        <div class="metric-card" style="--card-color:#F59E0B">
+          <div class="metric-icon">🔄</div>
+          <div><div class="metric-val" id="m-review">0</div><div class="metric-lbl">Cần ôn tập</div></div>
+        </div>
+        <div class="metric-card" style="--card-color:#06B6D4">
+          <div class="metric-icon">🎯</div>
+          <div><div class="metric-val" id="m-acc">0%</div><div class="metric-lbl">Độ chính xác</div></div>
+        </div>
+      </div>
+
+      <div class="card card-accent">
+        <div class="panel-head">
+          <span class="panel-title">✨ AI Gợi ý hôm nay</span>
+          <button class="btn btn-sm btn-ghost" onclick="getDashAI()">Làm mới</button>
+        </div>
+        <div id="dash-ai-tip" style="color:var(--text2);font-size:14px;line-height:1.7">
+          <button class="btn btn-primary btn-sm" onclick="getDashAI()">🤖 Nhận gợi ý từ AI Gemini</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="panel-head"><span class="panel-title">Từ vựng gần đây</span><button class="btn btn-sm btn-ghost" onclick="nav('vocab')">Xem tất cả →</button></div>
+        <div id="recent-words"></div>
+      </div>
+    </section>
+
+    <!-- ── VOCAB ── -->
+    <section id="s-vocab" class="section">
+      <div class="page-hero">
+        <h1 class="page-title">Thư viện <span class="hl">từ vựng</span></h1>
+        <p class="page-subtitle">Quản lý và tra cứu toàn bộ từ vựng của bạn</p>
+      </div>
+      <div class="search-wrap">
+        <input type="text" id="search-input" class="input search-input" placeholder="🔍 Tìm kiếm từ vựng..." oninput="filterWords()">
+        <select class="select" id="filter-set" onchange="filterWords()" style="min-width:150px">
+          <option value="">Tất cả bộ từ</option>
+        </select>
+        <button class="btn btn-primary" onclick="nav('upload')">+ Thêm từ mới</button>
+      </div>
+      <div id="word-grid" class="word-grid">
+        <div class="empty"><div class="empty-icon">📚</div><p>Thư viện đang trống</p><button class="btn btn-primary btn-sm" onclick="nav('upload')">Thêm từ đầu tiên</button></div>
+      </div>
+    </section>
+
+    <!-- ── UPLOAD / ADD ── -->
+    <section id="s-upload" class="section">
+      <div class="page-hero">
+        <h1 class="page-title">Thêm <span class="hl">dữ liệu</span></h1>
+        <p class="page-subtitle">Nhập thủ công, upload file, giọng nói hoặc hình ảnh</p>
+      </div>
+      <div class="upload-grid">
+        <div>
+          <div class="card">
+            <div class="panel-head"><span class="panel-title">✏️ Nhập từ thủ công</span><button class="btn btn-sm btn-ghost" onclick="aiEnhance()">🤖 AI bổ sung</button></div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Từ / Thuật ngữ *</label><input type="text" id="nw-word" class="input" placeholder="e.g. Ephemeral"></div>
+                <div class="form-group"><label class="form-label">Nghĩa *</label><input type="text" id="nw-meaning" class="input" placeholder="e.g. Ngắn ngủi, thoáng qua"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Phiên âm IPA</label><input type="text" id="nw-pron" class="input" placeholder="/ɪˈfem.ər.əl/"></div>
+                <div class="form-group"><label class="form-label">Bộ từ vựng</label><input type="text" id="nw-set" class="input" list="set-list" placeholder="IELTS, TOEIC..."><datalist id="set-list"></datalist></div>
+              </div>
+              <div class="form-group"><label class="form-label">Câu ví dụ</label><textarea id="nw-example" class="input textarea" placeholder="Viết câu ví dụ bằng tiếng Anh..."></textarea></div>
+              <div class="form-group"><label class="form-label">Ghi chú / Mẹo nhớ</label><textarea id="nw-note" class="input textarea" placeholder="Mẹo ghi nhớ..."></textarea></div>
+              <button class="btn btn-primary btn-full" onclick="addWord()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Lưu từ vựng
+              </button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- File Upload -->
+          <div class="card">
+            <div class="panel-head"><span class="panel-title">📁 Upload file</span></div>
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('file-in').click()" ondragover="drgOver(event)" ondrop="drgDrop(event)">
+              <div class="dropzone-icon">☁</div>
+              <h3>Kéo thả file vào đây</h3>
+              <p>hoặc <span style="color:var(--accent)">nhấn để chọn</span></p>
+              <small>.txt · .csv · .pdf · .jpg · .png · .mp3</small>
+              <input type="file" id="file-in" class="hidden" multiple accept=".txt,.csv,.pdf,.jpg,.jpeg,.png,.mp3,.wav" onchange="onFileSelect(event)">
+            </div>
+            <div id="file-list" class="file-list"></div>
+          </div>
+          <!-- Voice -->
+          <div class="card">
+            <div class="panel-head"><span class="panel-title">🎙️ Giọng nói</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0">
+              <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">🎙</button>
+              <p id="voice-status" style="font-size:13px;color:var(--text2)">Nhấn để ghi âm</p>
+              <div id="voice-result" style="font-size:14px;color:var(--text);min-height:24px;text-align:center"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── QUIZ ── -->
+    <section id="s-quiz" class="section">
+      <div class="page-hero">
+        <h1 class="page-title">Luyện <span class="hl">tập</span></h1>
+        <p class="page-subtitle">Kiểm tra và củng cố từ vựng theo nhiều hình thức</p>
+      </div>
+      <div id="quiz-setup" class="quiz-setup">
+        <h3 style="font-size:17px;font-weight:700;margin-bottom:16px">Chọn loại bài tập</h3>
+        <div class="quiz-types">
+          <button class="quiz-type-btn active" onclick="selQT(this,'mc')">
+            <span class="qt-icon">🔤</span><span class="qt-name">Trắc nghiệm</span><span class="qt-desc">Chọn đáp án đúng</span>
+          </button>
+          <button class="quiz-type-btn" onclick="selQT(this,'type')">
+            <span class="qt-icon">⌨</span><span class="qt-name">Điền từ</span><span class="qt-desc">Nhập câu trả lời</span>
+          </button>
+          <button class="quiz-type-btn" onclick="selQT(this,'listen')">
+            <span class="qt-icon">🎵</span><span class="qt-name">Nghe & đoán</span><span class="qt-desc">Phát âm rồi chọn</span>
+          </button>
+          <button class="quiz-type-btn" onclick="selQT(this,'image')">
+            <span class="qt-icon">🖼</span><span class="qt-name">Nhìn & đoán</span><span class="qt-desc">Từ gợi ý hình ảnh</span>
+          </button>
+        </div>
+        <div class="form-row" style="margin-bottom:24px">
+          <div class="form-group"><label class="form-label">Số câu</label>
+            <select class="select" id="q-count"><option value="5">5 câu</option><option value="10" selected>10 câu</option><option value="20">20 câu</option><option value="50">50 câu</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Bộ từ vựng</label>
+            <select class="select" id="q-set"><option value="">Tất cả</option></select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="startQuiz()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Bắt đầu luyện tập
+        </button>
+      </div>
+
+      <div id="quiz-active" class="quiz-active hidden">
+        <div class="quiz-progress-wrap"><div class="quiz-progress-bar" id="q-bar"></div></div>
+        <div class="quiz-meta">
+          <span id="q-counter" style="font-weight:700">0/0</span>
+          <span class="quiz-score-badge">✓ <span id="q-score">0</span> đúng</span>
+        </div>
+        <div class="quiz-card">
+          <div class="quiz-q-hint" id="q-hint"></div>
+          <div class="quiz-question" id="q-question"></div>
+          <div class="quiz-answers" id="q-answers"></div>
+          <div id="q-feedback" style="display:none" class="quiz-feedback"></div>
+        </div>
+        <button class="btn btn-primary btn-full hidden" id="q-next" onclick="nextQ()">Câu tiếp theo →</button>
+      </div>
+
+      <div id="quiz-result" class="hidden">
+        <div class="result-wrap">
+          <div class="result-ring" id="res-ring"><span id="res-pct">0%</span></div>
+          <h2 style="font-size:24px;font-weight:900;letter-spacing:-1px;margin-bottom:8px" id="res-title"></h2>
+          <p style="color:var(--text2);font-size:15px" id="res-detail"></p>
+          <div class="result-actions">
+            <button class="btn btn-ghost" onclick="restartQuiz()">↺ Làm lại</button>
+            <button class="btn btn-primary" onclick="aiAnalyzeResult()">🤖 AI Phân tích sai lầm</button>
+          </div>
+          <div id="ai-result-analysis"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DOC TEST ── -->
+    <section id="s-doctest" class="section">
+      <div class="page-hero">
+        <h1 class="page-title">Upload <span class="hl">& Test</span></h1>
+        <p class="page-subtitle">Tải tài liệu lên · AI tạo bài test · Giải đáp chi tiết có hướng dẫn</p>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="panel-head">
+          <span class="panel-title">📄 Upload tài liệu học tập</span>
+          <span style="font-size:12px;color:var(--text3)">Hỗ trợ: .txt, .csv, .pdf (text)</span>
+        </div>
+        <div class="dropzone" id="doc-dropzone" onclick="document.getElementById('doc-file').click()" ondragover="drgOver(event)" ondrop="docFileDrop(event)" style="padding:32px 20px">
+          <div class="dropzone-icon" style="animation-delay:0.5s">📄</div>
+          <h3>Upload tài liệu, đề thi, bài tập</h3>
+          <p>AI sẽ đọc nội dung và tạo bài test phù hợp</p>
+          <small>.txt · .csv · .pdf · nội dung text</small>
+          <input type="file" id="doc-file" class="hidden" accept=".txt,.csv,.pdf" onchange="onDocFile(event)">
+        </div>
+        <div id="doc-preview" style="margin-top:16px;display:none">
+          <div class="panel-head">
+            <span class="panel-title" id="doc-name" style="color:var(--accent3)"></span>
+            <span id="doc-len" style="font-size:12px;color:var(--text3)"></span>
+          </div>
+          <div id="doc-content-preview" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);padding:14px;font-size:12.5px;font-family:var(--mono);color:var(--text2);max-height:160px;overflow-y:auto;line-height:1.6;white-space:pre-wrap"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="panel-head"><span class="panel-title">⚙️ Cấu hình bài test</span></div>
+        <div class="form-row" style="margin-bottom:14px">
+          <div class="form-group"><label class="form-label">Số câu hỏi</label>
+            <select class="select" id="dt-count"><option value="5">5 câu</option><option value="10" selected>10 câu</option><option value="15">15 câu</option><option value="20">20 câu</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Loại câu hỏi</label>
+            <select class="select" id="dt-type">
+              <option value="mixed">Kết hợp (Random)</option>
+              <option value="mc">Trắc nghiệm</option>
+              <option value="fill">Điền từ</option>
+              <option value="qa">Hỏi đáp mở</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Hoặc nhập nội dung thủ công</label>
+          <textarea id="dt-manual" class="input textarea" style="min-height:100px" placeholder="Dán nội dung tài liệu vào đây nếu không upload file..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="generateDocTest()">
+          <span class="spinner" id="dt-spin" style="display:none"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          AI Tạo bài test từ tài liệu
+        </button>
+      </div>
+
+      <div id="doc-result" class="doc-result hidden">
+        <div class="panel-head" style="margin-bottom:16px">
+          <span class="panel-title" style="font-size:18px">📝 Bài test & Đáp án chi tiết</span>
+          <button class="btn btn-sm btn-ghost" onclick="document.getElementById('doc-result').classList.add('hidden')">✕ Đóng</button>
+        </div>
+        <div id="doc-questions"></div>
+      </div>
+    </section>
+
+    <!-- ── AI CHAT ── -->
+    <section id="s-ai" class="section">
+      <div class="page-hero">
+        <h1 class="page-title">AI <span class="hl">Gemini</span></h1>
+        <p class="page-subtitle">Trợ lý học ngôn ngữ thông minh · Hỏi bất kỳ điều gì</p>
+      </div>
+      <div class="ai-layout">
+        <div class="chat-box">
+          <div class="chat-messages" id="chat-msgs">
+            <div class="chat-welcome">
+              <div class="chat-welcome-icon">✦</div>
+              <h3>Xin chào, tôi là AI Gemini</h3>
+              <p style="font-size:14px">Hỏi tôi về từ vựng, ngữ pháp, yêu cầu tạo bài tập hoặc bất cứ điều gì về ngôn ngữ</p>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-in" class="input" placeholder="Hỏi AI..." onkeypress="if(event.key==='Enter')sendAI()">
+            <button class="btn btn-primary" onclick="sendAI()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="panel-head"><span class="panel-title">🔑 Gemini API Key</span></div>
+            <div class="form-group">
+              <input type="password" id="gemini-key" class="input" placeholder="AIza..." oninput="saveKey()">
+              <small style="color:var(--text3);font-size:12px;margin-top:4px;display:block">Miễn phí tại <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></small>
+            </div>
+          </div>
+          <div class="card">
+            <div class="panel-title" style="margin-bottom:12px">Gợi ý nhanh</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;font-size:12px" onclick="suggest('Giải thích từ IELTS phổ biến nhất hiện nay và cách dùng')">📖 Top từ IELTS</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;font-size:12px" onclick="suggest('Tạo 5 câu trắc nghiệm từ vựng học thuật cấp độ B2')">✎ Tạo quiz B2</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;font-size:12px" onclick="suggest('Giải thích sự khác nhau giữa affect và effect kèm ví dụ')">🔍 Affect vs Effect</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;font-size:12px" onclick="suggest('Viết câu chuyện ngắn dùng 10 từ vựng học thuật C1')">📝 Câu chuyện C1</button>
+              <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;font-size:12px" onclick="suggest('Phân tích lỗi sai thường gặp khi học tiếng Anh của người Việt')">⚠️ Lỗi thường gặp</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FLASHCARD ── -->
+    <section id="s-flashcard" class="section">
+      <div class="page-hero">
+        <h1 class="page-title">Flash<span class="hl">card</span></h1>
+        <p class="page-subtitle">Ghi nhớ nhanh theo phương pháp lặp lại ngắt quãng</p>
+      </div>
+      <div id="fc-empty" class="empty">
+        <div class="empty-icon">🃏</div>
+        <p>Chưa có từ để luyện Flashcard</p>
+        <button class="btn btn-primary btn-sm" onclick="nav('upload')">Thêm từ vựng</button>
+      </div>
+      <div id="fc-player" class="fc-wrap hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <span id="fc-counter" style="font-size:13px;color:var(--text2);font-weight:600">0/0</span>
+          <select class="select" id="fc-set" onchange="loadFC()" style="min-width:140px"><option value="">Tất cả</option></select>
+        </div>
+        <div class="fc-card" id="fc-card" onclick="flipFC()">
+          <div class="fc-inner" id="fc-inner">
+            <div class="fc-face fc-front" id="fc-front"></div>
+            <div class="fc-face fc-back" id="fc-back"></div>
+          </div>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text3);margin-bottom:16px">Nhấn vào thẻ để lật · Đánh giá độ khó sau khi xem đáp án</p>
+        <div class="fc-controls">
+          <button class="btn btn-ghost" onclick="fcMove(-1)">← Trước</button>
+          <div class="fc-rate-btns">
+            <button class="btn btn-sm btn-danger" onclick="fcRate('hard')">😓 Khó</button>
+            <button class="btn btn-sm" style="background:rgba(245,158,11,0.15);color:#FCD34D;border:1px solid rgba(245,158,11,0.2)" onclick="fcRate('ok')">🤔 Ổn</button>
+            <button class="btn btn-sm btn-success" onclick="fcRate('easy')">😊 Dễ</button>
+          </div>
+          <button class="btn btn-ghost" onclick="fcMove(1)">Sau →</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- AI QUICK BAR (always visible) -->
+<div class="ai-quick-bar">
+  <div class="ai-bar-icon">✦</div>
+  <span class="ai-bar-label">AI</span>
+  <input type="text" id="quick-ai" class="ai-bar-input" placeholder="Hỏi AI nhanh: giải thích từ, kiểm tra ngữ pháp, tạo ví dụ..." onkeypress="if(event.key==='Enter')quickAI()">
+  <button class="btn btn-primary btn-sm" onclick="quickAI()">Gửi</button>
+  <button class="btn btn-ghost btn-sm" onclick="nav('ai')">Mở rộng ↗</button>
+</div>
+
+<!-- SHARE MODAL -->
+<div id="share-modal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="modal">
+    <h2>🔗 Chia sẻ ứng dụng</h2>
+    <p>Để share cho người khác truy cập từ bất kỳ đâu, dùng ngrok — công cụ miễn phí tạo đường dẫn công khai tức thì.</p>
+    <div class="share-steps">
+      <div class="share-step"><div class="share-step-num">1</div><p>Tải ngrok: <a href="https://ngrok.com/download" target="_blank" style="color:var(--accent3)">ngrok.com/download</a> → Đăng ký miễn phí → Lấy authtoken</p></div>
+      <div class="share-step"><div class="share-step-num">2</div><p>Mở terminal VS Code, chạy app rồi chạy lệnh: <code>ngrok http 5122</code></p></div>
+      <div class="share-step"><div class="share-step-num">3</div><p>Ngrok sẽ cấp 1 URL dạng: <code>https://xxxx.ngrok-free.app</code> — Share link này cho bạn bè!</p></div>
+      <div class="share-step"><div class="share-step-num">4</div><p>Tùy chọn nhanh hơn: VS Code → Extensions → <code>Live Share</code> → Share server port 5122</p></div>
+    </div>
+    <div class="ngrok-tip">
+      💡 <strong>Lệnh đầy đủ trong VS Code terminal:</strong><br>
+      <code>dotnet run</code> (terminal 1) → <code>ngrok http https://localhost:5122</code> (terminal 2)
+    </div>
+    <button class="btn btn-ghost btn-full" style="margin-top:16px" onclick="document.getElementById('share-modal').classList.add('hidden')">Đóng</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────
+const S = {
+  words: JSON.parse(localStorage.getItem('sl_words')||'[]'),
+  quizType:'mc', quizWords:[], qIdx:0, qScore:0, qWrong:[], qCorrect:[],
+  fcWords:[], fcIdx:0,
+  rec:null, isRec:false,
+  docContent:'', docName:'',
+  get sets(){return[...new Set(this.words.map(w=>w.set).filter(Boolean))]},
+};
+function save(){localStorage.setItem('sl_words',JSON.stringify(S.words))}
+function getKey(){return localStorage.getItem('sl_gemini_key')||''}
+function saveKey(){localStorage.setItem('sl_gemini_key',document.getElementById('gemini-key').value)}
+
+// ─── INIT ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  const k=getKey();if(k){const el=document.getElementById('gemini-key');if(el)el.value=k;}
+  updateStats();renderRecent();renderWordGrid();populateSets();initVoice();loadFC();
+});
+
+// ─── NAV ────────────────────────────────────────
+function nav(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn[data-s]').forEach(b=>b.classList.remove('active'));
+  const s=document.getElementById('s-'+name);if(s)s.classList.add('active');
+  const b=document.querySelector('.nav-btn[data-s="'+name+'"]');if(b)b.classList.add('active');
+  if(name==='flashcard')loadFC();
+  if(name==='quiz')populateSets();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── STATS ───────────────────────────────────────
+function updateStats(){
+  const t=S.words.length,m=S.words.filter(w=>w.mastered).length,r=S.words.filter(w=>!w.mastered&&w.attempts>0).length;
+  const ta=S.words.reduce((s,w)=>s+(w.attempts||0),0),tc=S.words.reduce((s,w)=>s+(w.correct||0),0);
+  const acc=ta?Math.round(tc/ta*100):0;
+  ['d-total','m-total'].forEach(id=>setText(id,t));
+  setText('d-sets',S.sets.length);
+  const str=parseInt(localStorage.getItem('sl_streak')||'0');setText('d-streak',str);
+  setText('m-mastered',m);setText('m-review',r);setText('m-acc',acc+'%');
+}
+function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v}
+
+// ─── ADD WORD ────────────────────────────────────
+function addWord(){
+  const word=v('nw-word'),meaning=v('nw-meaning');
+  if(!word||!meaning){toast('Nhập từ và nghĩa!','error');return;}
+  S.words.unshift({id:Date.now(),word,meaning,pronunciation:v('nw-pron'),set:v('nw-set'),example:v('nw-example'),note:v('nw-note'),createdAt:new Date().toISOString(),attempts:0,correct:0,mastered:false});
+  save();updateStats();renderRecent();renderWordGrid();populateSets();loadFC();
+  ['nw-word','nw-meaning','nw-pron','nw-set','nw-example','nw-note'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Đã thêm "'+word+'"','success');
+}
+function v(id){return(document.getElementById(id)?.value||'').trim()}
+
+// ─── RENDER ──────────────────────────────────────
+function renderRecent(){
+  const el=document.getElementById('recent-words');if(!el)return;
+  const r=S.words.slice(0,6);
+  if(!r.length){el.innerHTML='<div class="empty"><div class="empty-icon">📖</div><p>Chưa có từ nào</p><button class="btn btn-primary btn-sm" onclick="nav(\'upload\')">Thêm ngay</button></div>';return;}
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">`+r.map(w=>`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);padding:12px">
+      <div style="font-weight:800;font-size:15px;letter-spacing:-0.3px">${esc(w.word)}</div>
+      ${w.pronunciation?`<div style="color:var(--accent3);font-family:var(--mono);font-size:11px;margin:2px 0">${esc(w.pronunciation)}</div>`:''}
+      <div style="color:var(--text2);font-size:13px;margin-top:4px">${esc(w.meaning)}</div>
+    </div>`).join('')+'</div>';
+}
+
+function renderWordGrid(list){
+  const el=document.getElementById('word-grid');if(!el)return;
+  const arr=list||S.words;
+  if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>Thư viện đang trống</p></div>';return;}
+  el.innerHTML=arr.map(w=>`
+    <div class="word-card">
+      <div class="wc-word">${esc(w.word)}</div>
+      ${w.pronunciation?`<div class="wc-pron">${esc(w.pronunciation)}</div>`:''}
+      <div class="wc-meaning">${esc(w.meaning)}</div>
+      ${w.example?`<div class="wc-example">"${esc(w.example)}"</div>`:''}
+      <div class="wc-footer">
+        ${w.set?`<span class="wc-tag">${esc(w.set)}</span>`:'<span></span>'}
+        <div class="wc-actions">
+          <button class="icon-btn" onclick="speak('${esc(w.word)}')" title="Phát âm">🔊</button>
+          <button class="icon-btn" onclick="delWord(${w.id})" title="Xoá">🗑</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterWords(){
+  const q=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const set=document.getElementById('filter-set')?.value||'';
+  renderWordGrid(S.words.filter(w=>(!q||w.word.toLowerCase().includes(q)||w.meaning.toLowerCase().includes(q))&&(!set||w.set===set)));
+}
+
+function delWord(id){S.words=S.words.filter(w=>w.id!==id);save();updateStats();renderRecent();renderWordGrid();populateSets();loadFC();toast('Đã xóa','success')}
+
+function populateSets(){
+  const sets=S.sets;
+  ['filter-set','q-set','fc-set'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value;
+    el.innerHTML='<option value="">Tất cả</option>'+sets.map(s=>`<option value="${esc(s)}"${s===cur?' selected':''}>${esc(s)}</option>`).join('');
+  });
+  const dl=document.getElementById('set-list');if(dl)dl.innerHTML=sets.map(s=>`<option value="${esc(s)}">`).join('');
+}
+
+// ─── VOICE ───────────────────────────────────────
+function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang='en-US';speechSynthesis.speak(u)}
+function initVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('voice-status').textContent='Trình duyệt không hỗ trợ';return;}
+  S.rec=new SR();S.rec.lang='en-US';S.rec.continuous=false;S.rec.interimResults=false;
+  S.rec.onresult=e=>{const t=e.results[0][0].transcript;document.getElementById('voice-result').textContent=t;document.getElementById('nw-word').value=t;stopVoice();};
+  S.rec.onend=()=>stopVoice();S.rec.onerror=()=>{stopVoice();toast('Lỗi ghi âm','error')};
+}
+function toggleVoice(){
+  if(S.isRec){stopVoice();return;}
+  if(!S.rec){toast('Không hỗ trợ','error');return;}
+  S.isRec=true;document.getElementById('voice-btn').classList.add('recording');
+  document.getElementById('voice-status').textContent='🔴 Đang ghi âm...';
+  try{S.rec.start();}catch(e){}
+}
+function stopVoice(){
+  S.isRec=false;document.getElementById('voice-btn')?.classList.remove('recording');
+  const st=document.getElementById('voice-status');if(st&&!st.textContent.startsWith('Nhận'))st.textContent='Nhấn để ghi âm';
+  try{S.rec?.stop()}catch(e){}
+}
+
+// ─── FILE UPLOAD ─────────────────────────────────
+function drgOver(e){e.preventDefault();e.currentTarget.classList.add('dragging')}
+function drgDrop(e){e.preventDefault();e.currentTarget.classList.remove('dragging');procFiles(e.dataTransfer.files)}
+function onFileSelect(e){procFiles(e.target.files)}
+function procFiles(files){
+  const fl=document.getElementById('file-list');fl.innerHTML='';
+  Array.from(files).forEach(f=>{
+    const icon=f.type.startsWith('image/')?'🖼':f.type==='application/pdf'?'📄':f.type.startsWith('audio/')?'🎵':'📝';
+    const sz=(f.size/1024).toFixed(1)+' KB';
+    fl.innerHTML+=`<div class="file-item"><span class="file-item-icon">${icon}</span><span class="file-item-name">${esc(f.name)}</span><span class="file-item-size">${sz}</span></div>`;
+    if(f.type==='text/plain'||f.name.endsWith('.txt')){const r=new FileReader();r.onload=e=>parseTxt(e.target.result);r.readAsText(f);}
+    else if(f.name.endsWith('.csv')){const r=new FileReader();r.onload=e=>parseCsv(e.target.result);r.readAsText(f);}
+  });
+}
+function parseTxt(text){
+  let added=0;
+  text.split('\n').map(l=>l.trim()).filter(Boolean).forEach(line=>{
+    const p=line.split(/\t|  +|\s+-\s+|:\s+/);
+    if(p.length>=2){S.words.unshift({id:Date.now()+Math.random(),word:p[0].trim(),meaning:p[1].trim(),pronunciation:'',set:'File Import',example:'',note:'',createdAt:new Date().toISOString(),attempts:0,correct:0,mastered:false});added++;}
+  });
+  if(added){save();updateStats();renderWordGrid();renderRecent();populateSets();toast('✅ Đã nhập '+added+' từ','success');}
+  else toast('Định dạng: từ - nghĩa (mỗi dòng)','error');
+}
+function parseCsv(text){
+  let added=0;
+  text.split('\n').slice(1).forEach(row=>{const c=row.split(',');if(c.length>=2&&c[0].trim()){S.words.unshift({id:Date.now()+Math.random(),word:c[0].trim(),meaning:c[1].trim(),pronunciation:c[2]?.trim()||'',set:c[3]?.trim()||'CSV',example:'',note:'',createdAt:new Date().toISOString(),attempts:0,correct:0,mastered:false});added++;}});
+  if(added){save();updateStats();renderWordGrid();renderRecent();populateSets();toast('✅ CSV: '+added+' từ','success');}
+}
+
+// ─── QUIZ ────────────────────────────────────────
+function selQT(btn,type){document.querySelectorAll('.quiz-type-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');S.quizType=type;}
+function startQuiz(){
+  const count=parseInt(document.getElementById('q-count').value);
+  const set=document.getElementById('q-set').value;
+  let pool=set?S.words.filter(w=>w.set===set):[...S.words];
+  if(pool.length<2){toast('Cần ít nhất 2 từ!','error');return;}
+  S.quizWords=shuffle(pool).slice(0,Math.min(count,pool.length));
+  S.qIdx=0;S.qScore=0;S.qWrong=[];S.qCorrect=[];
+  document.getElementById('quiz-setup').classList.add('hidden');
+  document.getElementById('quiz-active').classList.remove('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+  renderQ();
+}
+function renderQ(){
+  if(S.qIdx>=S.quizWords.length){showResult();return;}
+  const w=S.quizWords[S.qIdx],total=S.quizWords.length;
+  document.getElementById('q-bar').style.width=(S.qIdx/total*100)+'%';
+  document.getElementById('q-counter').textContent=(S.qIdx+1)+'/'+total;
+  document.getElementById('q-score').textContent=S.qScore;
+  const fb=document.getElementById('q-feedback');fb.style.display='none';fb.className='quiz-feedback';fb.textContent='';
+  document.getElementById('q-next').classList.add('hidden');
+  if(S.quizType==='type')renderTypeQ(w);
+  else if(S.quizType==='listen')renderListenQ(w);
+  else renderMCQ(w);
+}
+function renderMCQ(w){
+  document.getElementById('q-hint').textContent='Chọn nghĩa tiếng Việt đúng của từ:';
+  document.getElementById('q-question').innerHTML=`${esc(w.word)}${w.pronunciation?` <span style="color:var(--accent3);font-family:var(--mono);font-size:18px;font-weight:400">${esc(w.pronunciation)}</span>`:''}`;
+  const opts=shuffle([w.meaning,...shuffle(S.words.filter(x=>x.id!==w.id)).slice(0,3).map(x=>x.meaning)]);
+  document.getElementById('q-answers').innerHTML=opts.map(o=>`<button class="answer-btn" onclick="checkMC(this,'${escA(o)}','${escA(w.meaning)}')">${esc(o)}</button>`).join('');
+}
+function renderListenQ(w){
+  document.getElementById('q-hint').textContent='🎵 Nghe phát âm và chọn từ đúng:';
+  document.getElementById('q-question').innerHTML=`<button class="btn btn-primary" onclick="speak('${esc(w.word)}')">▶ Phát âm</button><span style="color:var(--text3);margin-left:12px;font-size:14px">Nhấn để nghe</span>`;
+  const opts=shuffle([w.word,...shuffle(S.words.filter(x=>x.id!==w.id)).slice(0,3).map(x=>x.word)]);
+  document.getElementById('q-answers').innerHTML=opts.map(o=>`<button class="answer-btn" onclick="checkMC(this,'${escA(o)}','${escA(w.word)}')">${esc(o)}</button>`).join('');
+}
+function renderTypeQ(w){
+  document.getElementById('q-hint').textContent='Nhập nghĩa tiếng Việt của từ:';
+  document.getElementById('q-question').textContent=w.word+(w.pronunciation?' '+w.pronunciation:'');
+  document.getElementById('q-answers').innerHTML=`<input type="text" class="typing-input" id="type-in" placeholder="Nhập nghĩa..." onkeypress="if(event.key==='Enter')checkType()"><button class="btn btn-primary" style="margin-top:12px" onclick="checkType()">Kiểm tra</button>`;
+  setTimeout(()=>document.getElementById('type-in')?.focus(),80);
+}
+function checkMC(btn,sel,correct){
+  const btns=document.querySelectorAll('.answer-btn');btns.forEach(b=>b.disabled=true);
+  const w=S.quizWords[S.qIdx];w.attempts=(w.attempts||0)+1;
+  if(sel===correct){btn.classList.add('correct');S.qScore++;w.correct=(w.correct||0)+1;if(w.correct>=3)w.mastered=true;S.qCorrect.push(w);showFB(true,`✓ Đúng! "${w.word}" = "${correct}"`);}
+  else{btn.classList.add('wrong');btns.forEach(b=>{if(b.textContent===correct)b.classList.add('reveal')});S.qWrong.push(w);showFB(false,`✗ Sai! Đáp án đúng: "${correct}"\n${w.example?'Ví dụ: '+w.example:''}`);}
+  save();document.getElementById('q-next').classList.remove('hidden');
+}
+function checkType(){
+  const inp=document.getElementById('type-in');if(!inp)return;
+  const val=inp.value.trim().toLowerCase(),w=S.quizWords[S.qIdx],correct=w.meaning.toLowerCase();
+  inp.disabled=true;w.attempts=(w.attempts||0)+1;
+  const ok=val&&(correct.includes(val)||val.includes(correct.split(/[\s,]/)[0]));
+  if(ok){S.qScore++;w.correct=(w.correct||0)+1;S.qCorrect.push(w);showFB(true,`✓ Đúng! "${w.word}" = "${w.meaning}"`);}
+  else{S.qWrong.push(w);showFB(false,`✗ Sai! Đáp án: "${w.meaning}"${w.note?'\n💡 Mẹo: '+w.note:''}`);}
+  save();document.getElementById('q-next').classList.remove('hidden');
+}
+function showFB(ok,msg){
+  const fb=document.getElementById('q-feedback');
+  fb.style.display='block';fb.className='quiz-feedback '+(ok?'fb-correct':'fb-wrong');fb.textContent=msg;
+}
+function nextQ(){S.qIdx++;renderQ()}
+function showResult(){
+  document.getElementById('quiz-active').classList.add('hidden');
+  document.getElementById('quiz-result').classList.remove('hidden');
+  const pct=Math.round(S.qScore/S.quizWords.length*100);
+  document.getElementById('res-pct').textContent=pct+'%';
+  document.getElementById('res-ring').style.setProperty('--pct',pct+'%');
+  const msgs=[[90,'🌟 Xuất sắc! Bạn thật tuyệt vời!'],[70,'👍 Khá tốt! Tiếp tục luyện tập!'],[50,'📖 Cần ôn thêm một chút!'],[0,'💪 Đừng nản! Thực hành là chìa khóa!']];
+  document.getElementById('res-title').textContent=msgs.find(m=>pct>=m[0])[1];
+  document.getElementById('res-detail').textContent=`${S.qScore}/${S.quizWords.length} câu đúng · ${S.qWrong.length} từ cần ôn lại`;
+  document.getElementById('ai-result-analysis').innerHTML='';
+  updateStats();
+}
+function restartQuiz(){
+  document.getElementById('quiz-setup').classList.remove('hidden');
+  document.getElementById('quiz-active').classList.add('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+}
+async function aiAnalyzeResult(){
+  const el=document.getElementById('ai-result-analysis');
+  el.innerHTML='<div class="ai-analysis"><div class="ai-analysis-header"><div class="spinner"></div> AI đang phân tích...</div></div>';
+  const wrong=S.qWrong.map(w=>`${w.word} (${w.meaning})`).join(', ');
+  const prompt=`Học viên vừa làm quiz và sai ${S.qWrong.length} từ: ${wrong||'không có từ sai'}.\nHãy:\n1. Phân tích pattern lỗi sai (ngắn gọn)\n2. Giải thích từng từ sai (nghĩa, cách dùng, ví dụ)\n3. Mẹo ghi nhớ cụ thể cho từng từ\n4. Kế hoạch ôn tập 3 ngày tới\nViết rõ ràng, có cấu trúc, không lan man.`;
+  const res=await callGemini(prompt);
+  el.innerHTML=`<div class="ai-analysis"><div class="ai-analysis-header">✦ Phân tích từ AI Gemini</div><div style="font-size:14px;line-height:1.8;color:var(--text2)">${fmtAI(res||'Nhập Gemini API Key để dùng tính năng này.')}</div></div>`;
+}
+
+// ─── DOC TEST ────────────────────────────────────
+function onDocFile(e){const f=e.target.files[0];if(!f)return;procDocFile(f)}
+function docFileDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)procDocFile(f)}
+function procDocFile(f){
+  const r=new FileReader();
+  r.onload=ev=>{
+    S.docContent=ev.target.result;S.docName=f.name;
+    document.getElementById('doc-preview').style.display='block';
+    document.getElementById('doc-name').textContent='📄 '+f.name;
+    document.getElementById('doc-len').textContent=S.docContent.length+' ký tự';
+    document.getElementById('doc-content-preview').textContent=S.docContent.slice(0,600)+(S.docContent.length>600?'\n...[còn nữa]':'');
+  };
+  r.readAsText(f,'utf-8');
+}
+async function generateDocTest(){
+  const content=S.docContent||document.getElementById('dt-manual').value.trim();
+  if(!content){toast('Upload file hoặc nhập nội dung!','error');return;}
+  const count=document.getElementById('dt-count').value;
+  const type=document.getElementById('dt-type').value;
+  const spin=document.getElementById('dt-spin');spin.style.display='inline-block';
+  const typeMap={mixed:'kết hợp trắc nghiệm và điền từ',mc:'chỉ trắc nghiệm 4 đáp án',fill:'chỉ điền từ/hoàn thành câu',qa:'câu hỏi mở ngắn'};
+  const prompt=`Dựa trên tài liệu sau đây, hãy tạo ${count} câu hỏi kiểm tra loại ${typeMap[type]}.
+
+QUAN TRỌNG - Yêu cầu định dạng trả về JSON:
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "mc" hoặc "fill" hoặc "qa",
+      "question": "Nội dung câu hỏi",
+      "options": ["A. ...", "B. ...", "C. ...", "D. ..."] (chỉ cho mc),
+      "answer": "Đáp án đúng (A/B/C/D cho mc, hoặc cụm từ/từ cho fill, hoặc câu trả lời cho qa)",
+      "explanation": "Giải thích chi tiết TẠI SAO đây là đáp án đúng, dẫn chứng từ tài liệu",
+      "steps": ["Bước 1: ...", "Bước 2: ...", "Bước 3: ..."] (hướng giải từng bước nếu cần)
+    }
+  ]
+}
+
+Câu hỏi phải sát với nội dung tài liệu, đáp án phải chính xác, giải thích phải rõ ràng và có hướng dẫn cụ thể.
+
+TÀI LIỆU:
+${content.slice(0,4000)}`;
+
+  const res=await callGemini(prompt);
+  spin.style.display='none';
+  if(!res){toast('Nhập Gemini API Key để dùng tính năng này!','error');return;}
+  try{
+    const clean=res.replace(/```json|```/g,'').trim();
+    const data=JSON.parse(clean);
+    renderDocQuestions(data.questions);
+  }catch(e){
+    // Fallback: show raw
+    document.getElementById('doc-result').classList.remove('hidden');
+    document.getElementById('doc-questions').innerHTML=`<div class="ai-analysis"><div style="font-size:14px;line-height:1.8;color:var(--text2)">${fmtAI(res)}</div></div>`;
+    toast('Đã tạo bài test','success');
+  }
+}
+function renderDocQuestions(qs){
+  document.getElementById('doc-result').classList.remove('hidden');
+  const typeLbl={mc:'Trắc nghiệm',fill:'Điền từ',qa:'Hỏi đáp'};
+  const typeColor={mc:'rgba(79,110,247,0.15)',fill:'rgba(16,185,129,0.12)',qa:'rgba(245,158,11,0.12)'};
+  const typeText={mc:'#8BA4FF',fill:'#6EE7B7',qa:'#FCD34D'};
+  document.getElementById('doc-questions').innerHTML=qs.map((q,i)=>`
+    <div class="solution-card">
+      <div class="solution-header" onclick="toggleSol(${i})">
+        <div class="sol-num">${i+1}</div>
+        <div class="sol-q">${esc(q.question)}</div>
+        <span class="sol-tag" style="background:${typeColor[q.type]||typeColor.mc};color:${typeText[q.type]||typeText.mc}">${typeLbl[q.type]||'Quiz'}</span>
+        <span style="color:var(--text3);font-size:18px;margin-left:8px" id="sol-arrow-${i}">▼</span>
+      </div>
+      <div class="sol-body" id="sol-body-${i}">
+        ${q.options&&q.options.length?`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">`+q.options.map(o=>`<div style="padding:8px 12px;border-radius:var(--r3);background:${q.answer&&o.startsWith(q.answer.charAt(0))?'rgba(16,185,129,0.1)':'var(--bg3)'};border:1px solid ${q.answer&&o.startsWith(q.answer.charAt(0))?'rgba(16,185,129,0.3)':'var(--border)'};font-size:13px;color:${q.answer&&o.startsWith(q.answer.charAt(0))?'#6EE7B7':'var(--text2)'}">${esc(o)}</div>`).join('')+'</div>':''}
+        <div class="sol-answer">✅ Đáp án: ${esc(q.answer||'')}</div>
+        <div class="sol-explanation">${fmtAI(q.explanation||'')}</div>
+        ${q.steps&&q.steps.length?`<div class="sol-steps">`+q.steps.map((s,si)=>`<div class="sol-step"><div class="step-num">${si+1}</div><span style="color:var(--text2)">${esc(s)}</span></div>`).join('')+'</div>':''}
+      </div>
+    </div>`).join('');
+  toast('✅ Đã tạo '+qs.length+' câu hỏi với đáp án chi tiết!','success');
+  document.getElementById('doc-result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function toggleSol(i){
+  const body=document.getElementById('sol-body-'+i);
+  const arrow=document.getElementById('sol-arrow-'+i);
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.textContent=open?'▲':'▼';
+}
+
+// ─── FLASHCARD ───────────────────────────────────
+function loadFC(){
+  const set=document.getElementById('fc-set')?.value||'';
+  S.fcWords=set?S.words.filter(w=>w.set===set):[...S.words];S.fcIdx=0;populateSets();
+  const empty=document.getElementById('fc-empty'),player=document.getElementById('fc-player');
+  if(!S.fcWords.length){empty?.classList.remove('hidden');player?.classList.add('hidden');}
+  else{empty?.classList.add('hidden');player?.classList.remove('hidden');renderFC();}
+}
+function renderFC(){
+  if(!S.fcWords.length)return;
+  const w=S.fcWords[S.fcIdx];
+  document.getElementById('fc-inner').classList.remove('flipped');
+  document.getElementById('fc-front').innerHTML=`<div class="fc-hint">Nhấn để xem nghĩa</div><div class="fc-word">${esc(w.word)}</div>${w.pronunciation?`<div class="fc-pron">${esc(w.pronunciation)}</div>`:''}<button style="margin-top:8px" class="btn btn-ghost btn-sm" onclick="event.stopPropagation();speak('${esc(w.word)}')">🔊 Nghe</button>`;
+  document.getElementById('fc-back').innerHTML=`<div class="fc-word" style="font-size:22px">${esc(w.meaning)}</div>${w.example?`<div style="font-size:13px;color:var(--text2);font-style:italic;margin-top:8px">"${esc(w.example)}"</div>`:''}`; 
+  document.getElementById('fc-counter').textContent=(S.fcIdx+1)+'/'+S.fcWords.length;
+}
+function flipFC(){document.getElementById('fc-inner').classList.toggle('flipped')}
+function fcMove(d){S.fcIdx=(S.fcIdx+d+S.fcWords.length)%S.fcWords.length;renderFC()}
+function fcRate(lvl){const w=S.fcWords[S.fcIdx];if(lvl==='easy'){w.mastered=true;w.correct=(w.correct||0)+2;}else if(lvl==='ok'){w.correct=(w.correct||0)+1;}else{w.mastered=false;}w.attempts=(w.attempts||0)+1;save();fcMove(1);}
+
+// ─── AI / GEMINI ─────────────────────────────────
+async function callGemini(prompt){
+  const key=getKey();if(!key)return null;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+    });
+    const d=await res.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text||null;
+  }catch(e){return null;}
+}
+async function sendAI(){
+  const inp=document.getElementById('chat-in');const msg=inp.value.trim();if(!msg)return;inp.value='';
+  addMsg(msg,'user');const thinking=addMsg('Đang suy nghĩ...','ai');
+  const res=await callGemini(msg);
+  thinking.querySelector('.msg-bubble').innerHTML=fmtAI(res||'Vui lòng nhập Gemini API Key trong phần "Gemini API Key" để sử dụng AI.');
+}
+function suggest(t){document.getElementById('chat-in').value=t;sendAI();}
+async function quickAI(){
+  const inp=document.getElementById('quick-ai');const msg=inp.value.trim();if(!msg)return;
+  inp.value='';nav('ai');
+  addMsg(msg,'user');const thinking=addMsg('Đang trả lời...','ai');
+  const res=await callGemini(msg);
+  thinking.querySelector('.msg-bubble').innerHTML=fmtAI(res||'Nhập Gemini API Key để dùng AI.');
+}
+function addMsg(text,role){
+  const msgs=document.getElementById('chat-msgs');
+  const welcome=msgs.querySelector('.chat-welcome');if(welcome)welcome.style.display='none';
+  const now=new Date().toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'});
+  const el=document.createElement('div');el.className=`msg msg-${role}`;
+  el.innerHTML=`<div class="msg-bubble">${role==='user'?esc(text):text}</div><div class="msg-time">${now}</div>`;
+  msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;return el;
+}
+async function getDashAI(){
+  const el=document.getElementById('dash-ai-tip');
+  el.innerHTML='<div class="spinner"></div> <span class="loading-dots">Đang tạo gợi ý</span>';
+  const prompt=`Học viên có ${S.words.length} từ vựng, đã thành thạo ${S.words.filter(w=>w.mastered).length} từ. Hãy đưa ra 3 gợi ý học tập cụ thể, thực tế và ngắn gọn để cải thiện hiệu quả. Mỗi gợi ý 1-2 câu, có tiêu đề bold.`;
+  const res=await callGemini(prompt);
+  el.innerHTML=res?fmtAI(res):`<button class="btn btn-primary btn-sm" onclick="getDashAI()">🤖 Cần Gemini API Key → Nhập tại mục AI</button>`;
+}
+async function aiEnhance(){
+  const word=document.getElementById('nw-word').value.trim();if(!word){toast('Nhập từ trước!','error');return;}
+  toast('🤖 AI đang bổ sung...','');
+  const prompt=`Từ tiếng Anh: "${word}"\nTrả về CHÍNH XÁC JSON này (không giải thích thêm):\n{"pronunciation":"/IPA/","meaning":"nghĩa tiếng Việt ngắn nhất","example":"1 câu tiếng Anh","note":"mẹo nhớ 1 câu"}\nChỉ JSON, không thêm gì khác.`;
+  const res=await callGemini(prompt);
+  if(!res){toast('Nhập API Key Gemini để dùng!','error');return;}
+  try{
+    const d=JSON.parse(res.replace(/```json|```/g,'').trim());
+    if(d.pronunciation)document.getElementById('nw-pron').value=d.pronunciation;
+    if(d.meaning&&!document.getElementById('nw-meaning').value)document.getElementById('nw-meaning').value=d.meaning;
+    if(d.example)document.getElementById('nw-example').value=d.example;
+    if(d.note)document.getElementById('nw-note').value=d.note;
+    toast('✅ AI đã bổ sung!','success');
+  }catch{toast('AI không trả về đúng định dạng','error');}
+}
+
+// ─── UTILS ───────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escA(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+function fmtAI(t){return String(t||'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/`(.*?)`/g,'<code style="background:rgba(6,182,212,0.1);color:var(--accent3);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:13px">$1</code>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>')}
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3200)}
+function showShareModal(){document.getElementById('share-modal').classList.remove('hidden')}
+</script>
+</body>
+</html>
