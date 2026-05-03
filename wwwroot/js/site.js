@@ -1738,7 +1738,7 @@ async function doRegister() {
     if (!username || !display || !password) return showAuthError('Please fill in all fields.');
     if (password !== confirm) return showAuthError('Passwords do not match.');
     if (password.length < 6) return showAuthError('Password must be at least 6 characters.');
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) return showAuthError('Username: letters, numbers, underscore only.');
+    if (!/^[a-zA-Z0-9_ ]+$/.test(username)) return showAuthError('Username: letters, numbers, underscore, space only.');
     showAuthError('⏳ Đang tạo tài khoản...');
     const users = await getUsers();
     if (users.find(u => u.username === username)) return showAuthError('Username already taken.');
@@ -1795,7 +1795,7 @@ let _adminAutoRefresh = null;
 
 function switchAdminTab(tab) {
     _adminTab = tab;
-    ['overview','users','activity'].forEach(t => {
+    ['overview','users','activity','announce','system'].forEach(t => {
         const el = document.getElementById('atab-' + t);
         const nav = document.getElementById('anav-' + t);
         if (el) el.style.display = t === tab ? 'block' : 'none';
@@ -1806,6 +1806,8 @@ function switchAdminTab(tab) {
     });
     if (tab === 'users') renderAdminUsers();
     if (tab === 'activity') renderActivityLog();
+    if (tab === 'announce') renderAnnounceHistory();
+    if (tab === 'system') refreshSystemStatus();
 }
 
 async function openAdmin() {
@@ -1835,9 +1837,108 @@ async function refreshAdmin() {
     await renderAdminStats();
     await renderOnlineUsers();
     await renderActivityPreview();
+    await renderAnnounceHistory();
+    refreshSystemStatus();
     const now = new Date();
     const el = document.getElementById('admin-last-refresh');
     if (el) el.textContent = `Last refreshed: ${now.toLocaleTimeString('vi-VN')}`;
+}
+
+// ─── SYSTEM TAB ───
+function refreshSystemStatus() {
+    const timeEl = document.getElementById('sys-time');
+    if (timeEl) timeEl.textContent = new Date().toLocaleString('vi-VN');
+    fetch('/api/health').then(r => r.json()).then(d => {
+        const groqEl = document.getElementById('sys-groq-status');
+        const proxyEl = document.getElementById('sys-proxy-status');
+        if (groqEl) groqEl.innerHTML = d.hasKey
+            ? '<span style="color:var(--green)">● Configured</span>'
+            : '<span style="color:var(--red)">● Missing</span>';
+        if (proxyEl) proxyEl.innerHTML = '<span style="color:var(--green)">● Online</span>';
+    }).catch(() => {
+        const proxyEl = document.getElementById('sys-proxy-status');
+        if (proxyEl) proxyEl.innerHTML = '<span style="color:var(--red)">● Offline</span>';
+    });
+}
+
+async function clearAllLogs() {
+    if (!confirm('Xóa toàn bộ activity log? Không thể hoàn tác!')) return;
+    await fbSet('activity_log', null);
+    await logActivity('Admin cleared all activity logs', 'admin');
+    alert('Đã xóa toàn bộ log.');
+    renderActivityLog();
+}
+
+async function exportUsers() {
+    const users = await getUsers();
+    const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `users_export_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+}
+
+function exportActivityLog() {
+    getActivityLog().then(log => {
+        const blob = new Blob([JSON.stringify(log, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `activity_log_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    });
+}
+
+// ─── ANNOUNCEMENT TAB ───
+async function sendAnnouncement() {
+    const type = document.getElementById('announce-type').value;
+    const title = document.getElementById('announce-title').value.trim();
+    const body = document.getElementById('announce-body').value.trim();
+    if (!title || !body) return alert('Vui lòng điền đầy đủ tiêu đề và nội dung.');
+    const user = getCurrentUser();
+    const announce = {
+        id: Date.now(), type, title, body,
+        sentBy: user?.displayName || 'Admin',
+        sentAt: new Date().toISOString()
+    };
+    await fbPush('announcements', announce);
+    await logActivity(`Admin sent announcement: "${title}"`, 'admin');
+    alert('✅ Đã gửi thông báo!');
+    clearAnnouncement();
+    renderAnnounceHistory();
+}
+
+function clearAnnouncement() {
+    const t = document.getElementById('announce-title');
+    const b = document.getElementById('announce-body');
+    if (t) t.value = '';
+    if (b) b.value = '';
+}
+
+async function renderAnnounceHistory() {
+    const el = document.getElementById('announce-history');
+    if (!el) return;
+    try {
+        const data = await fbGet('announcements');
+        if (!data) {
+            el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Chưa có thông báo nào.</div>';
+            return;
+        }
+        const list = Object.values(data).reverse().slice(0, 20);
+        const typeColor = { info: 'var(--accent)', warning: 'var(--gold)', success: 'var(--green)', error: 'var(--red)' };
+        const typeIcon  = { info: 'fa-circle-info', warning: 'fa-triangle-exclamation', success: 'fa-circle-check', error: 'fa-circle-exclamation' };
+        el.innerHTML = list.map(a => `
+            <div style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-left:3px solid ${typeColor[a.type]||'var(--accent)'};border-radius:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <i class="fa-solid ${typeIcon[a.type]||'fa-circle-info'}" style="color:${typeColor[a.type]||'var(--accent)'}"></i>
+                    <span style="font-weight:700;font-size:14px;color:var(--text)">${a.title}</span>
+                    <span style="margin-left:auto;font-size:10px;color:var(--text3)">${new Date(a.sentAt).toLocaleString('vi-VN')}</span>
+                </div>
+                <div style="font-size:13px;color:var(--text2);margin-bottom:6px">${a.body}</div>
+                <div style="font-size:11px;color:var(--text3)">Gửi bởi: ${a.sentBy}</div>
+            </div>`).join('');
+    } catch(e) {
+        el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Lỗi tải thông báo.</div>';
+    }
 }
 
 async function renderOnlineUsers() {
