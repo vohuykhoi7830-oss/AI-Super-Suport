@@ -1900,21 +1900,19 @@ async function loadAnnounceUserList() {
     try {
         const users = await getUsers();
         sel.innerHTML = '<option value="">-- Chọn user --</option>';
-        if (users) {
-            Object.values(users).forEach(u => {
-                if (u.uid) {
-                    const opt = document.createElement('option');
-                    opt.value = u.uid;
-                    opt.textContent = `${u.displayName || u.username} (@${u.username})`;
-                    sel.appendChild(opt);
-                }
+        if (users && users.length) {
+            users.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = String(u.id);
+                opt.textContent = `${u.displayName || u.username} (@${u.username}) — ${u.role}`;
+                sel.appendChild(opt);
             });
         }
-    } catch(e) {}
+    } catch(e) { console.error('loadAnnounceUserList error:', e); }
 }
 
 async function sendAnnouncement(target) {
-    let type, title, body, targetUid = null;
+    let type, title, body, targetId = null;
     if (target === 'all') {
         type = document.getElementById('announce-type').value;
         title = document.getElementById('announce-title').value.trim();
@@ -1923,22 +1921,28 @@ async function sendAnnouncement(target) {
         type = document.getElementById('announce-type2').value;
         title = document.getElementById('announce-title2').value.trim();
         body = document.getElementById('announce-body2').value.trim();
-        targetUid = document.getElementById('announce-target-user').value;
-        if (!targetUid) return alert('Vui lòng chọn user!');
+        targetId = document.getElementById('announce-target-user').value;
+        if (!targetId) return alert('Vui lòng chọn user!');
     }
     if (!title || !body) return alert('Vui lòng điền đầy đủ tiêu đề và nội dung.');
     const user = getCurrentUser();
+    // Get target display name
+    let targetLabel = 'all';
+    if (target !== 'all') {
+        const users = await getUsers();
+        const tUser = users.find(u => String(u.id) === String(targetId));
+        targetLabel = tUser ? tUser.displayName || tUser.username : targetId;
+    }
     const announce = {
         id: Date.now(), type, title, body,
-        target: target === 'all' ? 'all' : targetUid,
+        target: target === 'all' ? 'all' : String(targetId),
         sentBy: user?.displayName || 'Admin',
         sentAt: new Date().toISOString(),
         readBy: {}
     };
     await fbPush('announcements', announce);
-    await logActivity(`Admin sent announcement: "${title}" → ${target === 'all' ? 'All users' : 'User ' + targetUid}`, 'admin');
+    await logActivity(`Admin sent announcement: "${title}" → ${target === 'all' ? 'Tất cả' : targetLabel}`, 'admin');
     alert('✅ Đã gửi thông báo!');
-    // Clear fields
     if (target === 'all') {
         document.getElementById('announce-title').value = '';
         document.getElementById('announce-body').value = '';
@@ -1979,14 +1983,14 @@ function toggleNotifDropdown() {
 
 async function loadUserNotifications() {
     const user = getCurrentUser();
-    if (!user || !user.uid) return;
+    if (!user || !user.id) return;
     try {
         const data = await fbGet('announcements');
         if (!data) return;
         const myNotifs = Object.values(data).filter(a =>
-            a.target === 'all' || a.target === user.uid
+            a.target === 'all' || String(a.target) === String(user.id)
         ).reverse().slice(0, 20);
-        const unread = myNotifs.filter(a => !a.readBy || !a.readBy[user.uid]);
+        const unread = myNotifs.filter(a => !a.readBy || !a.readBy[user.id]);
         // Update badge
         const badge = document.getElementById('notif-badge');
         if (badge) {
@@ -2023,7 +2027,7 @@ async function markNotifRead(notifId) {
         const data = await fbGet('announcements');
         if (!data) return;
         const key = Object.keys(data).find(k => data[k].id == notifId);
-        if (key) await fbSet(`announcements/${key}/readBy/${user.uid}`, true);
+        if (key) await fbSet(`announcements/${key}/readBy/${user.id}`, true);
         loadUserNotifications();
     } catch(e) {}
 }
@@ -2036,8 +2040,8 @@ async function markAllRead() {
         if (!data) return;
         for (const key of Object.keys(data)) {
             const a = data[key];
-            if ((a.target === 'all' || a.target === user.uid) && (!a.readBy || !a.readBy[user.uid])) {
-                await fbSet(`announcements/${key}/readBy/${user.uid}`, true);
+            if ((a.target === 'all' || String(a.target) === String(user.id)) && (!a.readBy || !a.readBy[user.id])) {
+                await fbSet(`announcements/${key}/readBy/${user.id}`, true);
             }
         }
         loadUserNotifications();

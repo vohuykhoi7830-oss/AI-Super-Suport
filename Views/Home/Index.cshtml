@@ -418,18 +418,6 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
 
 /* old bar hidden */
 .chat-input-bar { display: none; }
-/* Notification bell */
-.notif-bell-wrap { position:relative;display:inline-flex;align-items:center }
-.notif-bell-btn { background:rgba(255,255,255,0.07);border:1px solid var(--border2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:15px;transition:0.2s }
-.notif-bell-btn:hover { background:rgba(59,130,246,0.15);color:var(--accent) }
-.notif-badge { position:absolute;top:-4px;right:-4px;background:var(--red);color:white;border-radius:50%;width:17px;height:17px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;display:none }
-.notif-dropdown { position:absolute;top:44px;right:0;width:340px;background:var(--bg1);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.6);z-index:9999;display:none;overflow:hidden }
-.notif-dropdown.open { display:block }
-.notif-header { padding:14px 16px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center }
-.notif-list { max-height:320px;overflow-y:auto }
-.notif-item { padding:12px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background 0.15s }
-.notif-item:hover { background:rgba(255,255,255,0.04) }
-.notif-item.unread { border-left:3px solid var(--accent) }
 
 /* ── ChatGPT-style input wrap ── */
 .chat-input-wrap {
@@ -690,7 +678,24 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
             <div class="page-title">AI <span>Instant</span> Translator</div>
             <div class="page-sub">Tự động nhận diện & dịch — không cần chọn ngôn ngữ. Auto-detect & translate — no language selection needed. Powered by Groq (Llama 3.3 70B).</div>
         </div>
-        <div class="ai-badge">AI Online</div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <div class="notif-bell-wrap" id="notif-bell-wrap">
+                <button class="notif-bell-btn" onclick="toggleNotifDropdown()" title="Thông báo">
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+                <span class="notif-badge" id="notif-badge">0</span>
+                <div class="notif-dropdown" id="notif-dropdown">
+                    <div class="notif-header">
+                        <span style="font-weight:700;font-size:14px;color:var(--text)"><i class="fa-solid fa-bell" style="color:var(--accent);margin-right:6px"></i>Thông báo</span>
+                        <button onclick="markAllRead()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-weight:600">Đọc hết</button>
+                    </div>
+                    <div class="notif-list" id="notif-list">
+                        <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Không có thông báo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-badge">AI Online</div>
+        </div>
     </div>
 
     <!-- Image translate input -->
@@ -774,6 +779,22 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
             <div class="card-title"><i class="fa-solid fa-file" style="color:var(--accent3)"></i> Documents</div>
             <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:900;color:var(--accent3)" id="file-count-home">0</div>
             <div style="font-size:12px;color:var(--text3)">files saved</div>
+        </div>
+    </div>
+
+    <!-- User Notification Panel -->
+    <div id="user-notif-panel" style="margin-top:20px;display:none">
+        <div class="card" style="border-color:rgba(59,130,246,0.25)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                <div class="card-title" style="margin:0">
+                    <i class="fa-solid fa-bell" style="color:var(--accent)"></i> Thông báo từ Admin
+                    <span id="home-notif-count" style="margin-left:8px;background:var(--red);color:white;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800;display:none">0</span>
+                </div>
+                <button class="btn sm ghost" onclick="markAllRead()"><i class="fa-solid fa-check-double"></i> Đọc tất cả</button>
+            </div>
+            <div id="home-notif-list" style="display:flex;flex-direction:column;gap:8px">
+                <div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Không có thông báo mới</div>
+            </div>
         </div>
     </div>
 </section>
@@ -1170,24 +1191,7 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
             <div class="page-title">AI Research <span>Coach</span></div>
             <div class="page-sub">Smart AI assistant — gửi tin nhắn, hình ảnh, file, hoặc nói chuyện bằng giọng nói.</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
-            <div class="notif-bell-wrap" id="notif-bell-wrap">
-                <button class="notif-bell-btn" onclick="toggleNotifDropdown()" title="Thông báo">
-                    <i class="fa-solid fa-bell"></i>
-                </button>
-                <span class="notif-badge" id="notif-badge">0</span>
-                <div class="notif-dropdown" id="notif-dropdown">
-                    <div class="notif-header">
-                        <span style="font-weight:700;font-size:14px;color:var(--text)"><i class="fa-solid fa-bell" style="color:var(--accent);margin-right:6px"></i>Thông báo</span>
-                        <button onclick="markAllRead()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-weight:600">Đánh dấu đã đọc</button>
-                    </div>
-                    <div class="notif-list" id="notif-list">
-                        <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Không có thông báo nào</div>
-                    </div>
-                </div>
-            </div>
-            <div class="ai-badge">AI Supper Support</div>
-        </div>
+        <div class="ai-badge">AI Supper Support</div>
     </div>
 
     <div class="chat-wrapper">
@@ -1204,7 +1208,13 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
         <div id="chat-messages" class="chat-messages">
             <div class="msg">
                 <div class="avatar ai"><i class="fa-solid fa-microchip"></i></div>
-                <div class="bubble ai" style="font-size:13px;padding:10px 14px;max-width:420px">👋 Xin chào! Tôi là <strong>AI Supper Support</strong> — trợ lý học tiếng Anh của bạn. Gõ tin nhắn, gửi ảnh, đính kèm file hoặc nhấn 🎤 để bắt đầu!</div>
+                <div class="bubble ai">Xin chào! Tôi là <strong>AI Supper Support</strong> — trợ lý học tiếng Anh toàn diện của bạn. 🎓<br><br>
+Bạn có thể:<br>
+• 💬 Gõ tin nhắn bất kỳ<br>
+• 🖼️ Gửi hình ảnh để AI phân tích<br>
+• 📎 Đính kèm file PDF/Word/TXT<br>
+• 🎤 Nhấn mic để nói chuyện bằng giọng nói<br><br>
+Ask me anything!</div>
             </div>
         </div>
 
@@ -1254,8 +1264,8 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
                 <div class="chat-attach-chips" id="chat-attach-preview" style="display:none"></div>
 
                 <!-- Text area -->
-                <textarea id="chat-input" style="text-align:center"
-                    placeholder="Hãy nhập câu hỏi vào đây....."
+                <textarea id="chat-input"
+                    placeholder="Hỏi bất kỳ điều gì..."
                     rows="1"
                     oninput="autoresizeChat(this)"
                     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
@@ -1266,7 +1276,10 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
                         +
                     </button>
 
-                    <div style="flex:1"></div>
+                    <div style="display:flex;align-items:center;gap:4px;flex:1;margin-left:8px">
+                        <!-- quick shortcuts visible inline -->
+                        <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;user-select:none">Enter ↵ gửi · Shift+Enter xuống dòng</span>
+                    </div>
 
                     <button class="chat-mic-btn" id="mic-btn" onclick="toggleMic()" title="Nói chuyện bằng giọng nói">
                         <i class="fa-solid fa-microphone"></i>
@@ -1311,294 +1324,148 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
 </div>
 
 <!-- ════ ADMIN PANEL ════ -->
-<style>
-.admin-layout { display:flex;height:100vh;overflow:hidden }
-.admin-sidebar { width:240px;min-width:240px;background:var(--bg1);border-right:1px solid var(--border2);display:flex;flex-direction:column;padding:0 }
-.admin-sidebar-header { padding:22px 20px 18px;border-bottom:1px solid var(--border2) }
-.admin-sidebar-nav { flex:1;padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:3px }
-.admin-nav-item { display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:0.15s;width:100%;text-align:left;font-family:'DM Sans',sans-serif }
-.admin-nav-item:hover { background:rgba(255,255,255,0.05);color:var(--text) }
-.admin-nav-item.active { background:rgba(59,130,246,0.15);color:var(--accent) }
-.admin-nav-item i { width:16px;text-align:center }
-.admin-nav-sep { height:1px;background:var(--border2);margin:8px 10px }
-.admin-nav-label { padding:6px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3) }
-.admin-sidebar-footer { padding:14px 10px;border-top:1px solid var(--border2) }
-.admin-content { flex:1;overflow-y:auto;background:var(--bg) }
-.admin-topbar { display:flex;justify-content:space-between;align-items:center;padding:18px 28px;border-bottom:1px solid var(--border2);background:var(--bg1);position:sticky;top:0;z-index:10 }
-.admin-body { padding:24px 28px }
-</style>
-<div id="admin-panel" style="position:fixed;inset:0;background:var(--bg);z-index:8000;display:none">
-  <div class="admin-layout">
+<div id="admin-panel" style="position:fixed;inset:0;background:rgba(7,11,20,0.98);z-index:8000;display:none;backdrop-filter:blur(10px);overflow-y:auto">
+  <div style="max-width:1200px;margin:0 auto;padding:32px">
 
-    <!-- ── Sidebar ── -->
-    <div class="admin-sidebar">
-      <div class="admin-sidebar-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center">
-            <i class="fa-solid fa-gauge-high" style="color:white;font-size:14px"></i>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:900;color:var(--text)">Admin Panel</div>
-            <div style="font-size:10px;color:var(--text3)" id="admin-last-refresh">Loading...</div>
-          </div>
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border2)">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 20px rgba(59,130,246,0.35)">
+                <i class="fa-solid fa-gauge-high" style="color:white;font-size:18px"></i>
+            </div>
+            <div>
+                <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:900">Admin <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Dashboard</span></div>
+                <div style="color:var(--text3);font-size:12px;margin-top:2px" id="admin-last-refresh">Loading...</div>
+            </div>
         </div>
       </div>
-
-      <div class="admin-sidebar-nav">
-        <div class="admin-nav-label">Tổng quan</div>
-        <button id="anav-overview" class="admin-nav-item active" onclick="switchAdminTab('overview')">
-          <i class="fa-solid fa-chart-pie" style="color:var(--accent)"></i> Overview
-        </button>
-        <button id="anav-users" class="admin-nav-item" onclick="switchAdminTab('users')">
-          <i class="fa-solid fa-users" style="color:var(--accent2)"></i> Quản lý Users
-        </button>
-
-        <div class="admin-nav-sep"></div>
-        <div class="admin-nav-label">Theo dõi</div>
-        <button id="anav-activity" class="admin-nav-item" onclick="switchAdminTab('activity')">
-          <i class="fa-solid fa-chart-line" style="color:var(--green)"></i> Activity Log
-        </button>
-        <button id="anav-announce" class="admin-nav-item" onclick="switchAdminTab('announce')">
-          <i class="fa-solid fa-bullhorn" style="color:var(--gold)"></i> Thông báo
-          <span id="unsent-badge" style="margin-left:auto;background:var(--gold);color:black;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">New</span>
-        </button>
-
-        <div class="admin-nav-sep"></div>
-        <div class="admin-nav-label">Hệ thống</div>
-        <button id="anav-system" class="admin-nav-item" onclick="switchAdminTab('system')">
-          <i class="fa-solid fa-gear" style="color:var(--text2)"></i> Hệ thống
-        </button>
-      </div>
-
-      <div class="admin-sidebar-footer">
-        <button class="admin-nav-item" onclick="closeAdmin()" style="color:var(--red);width:100%">
-          <i class="fa-solid fa-right-from-bracket"></i> Exit Dashboard
-        </button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn sm ghost" onclick="refreshAdmin()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        <button class="btn ghost" onclick="closeAdmin()" style="color:var(--red)"><i class="fa-solid fa-xmark"></i> Close</button>
       </div>
     </div>
 
-    <!-- ── Main Content ── -->
-    <div class="admin-content">
-      <!-- Topbar -->
-      <div class="admin-topbar">
-        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:900;color:var(--text)" id="admin-page-title">
-          <i class="fa-solid fa-chart-pie" style="color:var(--accent);margin-right:8px"></i>Overview
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <div style="display:flex;gap:12px">
-            <div style="text-align:center;padding:6px 14px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:10px">
-              <div style="font-size:10px;color:var(--text3)">Users</div>
-              <div style="font-size:16px;font-weight:900;color:var(--accent)" id="stat-total">0</div>
-            </div>
-            <div style="text-align:center;padding:6px 14px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:10px">
-              <div style="font-size:10px;color:var(--green)">Online</div>
-              <div style="font-size:16px;font-weight:900;color:var(--green)" id="stat-online">0</div>
-            </div>
-            <div style="text-align:center;padding:6px 14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px">
-              <div style="font-size:10px;color:var(--red)">Banned</div>
-              <div style="font-size:16px;font-weight:900;color:var(--red)" id="stat-banned">0</div>
-            </div>
-          </div>
-          <button class="btn sm ghost" onclick="refreshAdmin()" title="Refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
-        </div>
+    <!-- Stats Row -->
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px" id="admin-stats-row">
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Total Users</div>
+        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--accent)" id="stat-total">0</div>
       </div>
+      <div class="card" style="text-align:center;padding:16px;border-color:rgba(16,185,129,0.3)">
+        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🟢 Online Now</div>
+        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--green)" id="stat-online">0</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Active Today</div>
+        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--accent3)" id="stat-active">0</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Admins</div>
+        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--accent2)" id="stat-admins">0</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Moderators</div>
+        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--gold)" id="stat-mods">0</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;border-color:rgba(239,68,68,0.25)">
+        <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Banned</div>
+        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--red)" id="stat-banned">0</div>
+      </div>
+    </div>
 
-      <div class="admin-body">
-        <!-- Stats mini row -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
-          <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px">
-            <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,0.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-users" style="color:var(--accent)"></i></div>
-            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Total Users</div><div style="font-size:22px;font-weight:900;color:var(--accent)" id="stat-total2">0</div></div>
-          </div>
-          <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px;border-color:rgba(16,185,129,0.25)">
-            <div style="width:38px;height:38px;border-radius:10px;background:rgba(16,185,129,0.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-circle" style="color:var(--green);font-size:10px;animation:pulse 2s infinite"></i></div>
-            <div><div style="font-size:10px;color:var(--green);text-transform:uppercase">Active Today</div><div style="font-size:22px;font-weight:900;color:var(--green)" id="stat-active">0</div></div>
-          </div>
-          <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px">
-            <div style="width:38px;height:38px;border-radius:10px;background:rgba(139,92,246,0.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-shield-halved" style="color:var(--accent2)"></i></div>
-            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Admins</div><div style="font-size:22px;font-weight:900;color:var(--accent2)" id="stat-admins">0</div></div>
-          </div>
-          <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px">
-            <div style="width:38px;height:38px;border-radius:10px;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-bolt" style="color:var(--gold)"></i></div>
-            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Moderators</div><div style="font-size:22px;font-weight:900;color:var(--gold)" id="stat-mods">0</div></div>
-          </div>
-        </div>
+    <!-- Tab Nav -->
+    <div style="display:flex;gap:4px;margin-bottom:20px;background:rgba(255,255,255,0.03);border-radius:12px;padding:4px;border:1px solid var(--border2)">
+        <button id="anav-overview" onclick="switchAdminTab('overview')" style="flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.2s;background:rgba(59,130,246,0.15);color:var(--accent)">
+            <i class="fa-solid fa-chart-pie"></i> Overview
+        </button>
+        <button id="anav-users" onclick="switchAdminTab('users')" style="flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.2s;background:transparent;color:var(--text2)">
+            <i class="fa-solid fa-users"></i> Users
+        </button>
+        <button id="anav-activity" onclick="switchAdminTab('activity')" style="flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.2s;background:transparent;color:var(--text2)">
+            <i class="fa-solid fa-chart-line"></i> Activity Log
+        </button>
+    </div>
 
-        <!-- Overview Tab -->
-        <div id="atab-overview">
-          <div class="card" style="margin-bottom:20px;border-color:rgba(16,185,129,0.2)">
+    <!-- Overview Tab -->
+    <div id="atab-overview">
+        <!-- Online Users -->
+        <div class="card" style="margin-bottom:20px;border-color:rgba(16,185,129,0.2)">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-              <div class="card-title" style="margin:0;color:var(--green)"><i class="fa-solid fa-circle" style="font-size:10px;color:var(--green);animation:pulse 2s infinite"></i> Users Online Now</div>
-              <span id="online-count-badge" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--green);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">0 online</span>
+                <div class="card-title" style="margin:0;color:var(--green)"><i class="fa-solid fa-circle" style="font-size:10px;color:var(--green);animation:pulse 2s infinite"></i> Users Online Now</div>
+                <span id="online-count-badge" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--green);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">0 online</span>
             </div>
             <div id="online-users-list" style="display:flex;flex-wrap:wrap;gap:8px">
-              <div style="color:var(--text3);font-size:13px;padding:12px">No users currently online.</div>
+                <div style="color:var(--text3);font-size:13px;padding:12px">No users currently online.</div>
             </div>
-          </div>
-          <div class="card">
+        </div>
+        <!-- Recent Activity Preview -->
+        <div class="card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-              <div class="card-title" style="margin:0"><i class="fa-solid fa-bolt" style="color:var(--gold)"></i> Recent Activity</div>
-              <button onclick="switchAdminTab('activity')" class="btn sm ghost"><i class="fa-solid fa-arrow-right"></i> View All</button>
+                <div class="card-title" style="margin:0"><i class="fa-solid fa-bolt" style="color:var(--gold)"></i> Recent Activity</div>
+                <button onclick="switchAdminTab('activity')" class="btn sm ghost"><i class="fa-solid fa-arrow-right"></i> View All</button>
             </div>
             <div id="activity-log-preview" style="display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto"></div>
+        </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="atab-users" style="display:none">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div class="card-title" style="margin:0"><i class="fa-solid fa-users" style="color:var(--accent)"></i> User Management</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" class="inp" placeholder="🔍 Search users..." style="width:200px" oninput="renderAdminUsers(this.value)">
+            <select class="inp" style="width:130px" onchange="filterAdminUsers(this.value)" id="user-role-filter">
+                <option value="">All roles</option>
+                <option value="admin">Admin</option>
+                <option value="moderator">Moderator</option>
+                <option value="user">User</option>
+            </select>
+            <button class="btn sm" onclick="openAddUserModal()"><i class="fa-solid fa-plus"></i> Add User</button>
           </div>
         </div>
-
-        <!-- Users Tab -->
-        <div id="atab-users" style="display:none">
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-              <div class="card-title" style="margin:0"><i class="fa-solid fa-users" style="color:var(--accent)"></i> User Management</div>
-              <div style="display:flex;gap:10px;align-items:center">
-                <input type="text" class="inp" placeholder="🔍 Search users..." style="width:200px" oninput="renderAdminUsers(this.value)">
-                <select class="inp" style="width:130px" onchange="filterAdminUsers(this.value)" id="user-role-filter">
-                  <option value="">All roles</option>
-                  <option value="admin">Admin</option>
-                  <option value="moderator">Moderator</option>
-                  <option value="user">User</option>
-                </select>
-                <button class="btn sm" onclick="openAddUserModal()"><i class="fa-solid fa-plus"></i> Add User</button>
-              </div>
-            </div>
-            <div style="overflow-x:auto">
-              <table style="width:100%;border-collapse:collapse;font-size:13px" id="admin-user-table">
-                <thead>
-                  <tr style="border-bottom:1px solid var(--border2)">
-                    <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">User</th>
-                    <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Role</th>
-                    <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Status</th>
-                    <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Last Active</th>
-                    <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Actions</th>
-                    <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Features</th>
-                    <th style="text-align:right;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">⋮</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-tbody"></tbody>
-              </table>
-            </div>
-          </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px" id="admin-user-table">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border2)">
+                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">User</th>
+                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Role</th>
+                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Status</th>
+                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Last Active</th>
+                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Actions</th>
+                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Features</th>
+                <th style="text-align:right;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">⋮</th>
+              </tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
         </div>
+      </div>
+    </div>
 
-        <!-- Activity Tab -->
-        <div id="atab-activity" style="display:none">
-          <div class="card">
+    <!-- Activity Tab -->
+    <div id="atab-activity" style="display:none">
+        <div class="card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-              <div class="card-title" style="margin:0"><i class="fa-solid fa-chart-line" style="color:var(--green)"></i> Full Activity Log</div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <select class="inp" style="width:140px" id="log-type-filter" onchange="renderActivityLog()">
-                  <option value="">All types</option>
-                  <option value="login">Login</option>
-                  <option value="logout">Logout</option>
-                  <option value="register">Register</option>
-                  <option value="admin">Admin</option>
-                  <option value="info">Info</option>
-                </select>
-                <input type="text" class="inp" placeholder="🔍 Search logs..." style="width:180px" id="log-search" oninput="renderActivityLog()">
-                <button class="btn sm ghost" onclick="exportActivityLog()"><i class="fa-solid fa-download"></i> Export</button>
-              </div>
+                <div class="card-title" style="margin:0"><i class="fa-solid fa-chart-line" style="color:var(--green)"></i> Full Activity Log</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <select class="inp" style="width:140px" id="log-type-filter" onchange="renderActivityLog()">
+                        <option value="">All types</option>
+                        <option value="login">Login</option>
+                        <option value="logout">Logout</option>
+                        <option value="register">Register</option>
+                        <option value="admin">Admin</option>
+                        <option value="info">Info</option>
+                    </select>
+                    <input type="text" class="inp" placeholder="🔍 Search logs..." style="width:180px" id="log-search" oninput="renderActivityLog()">
+                </div>
             </div>
-            <div id="activity-log" style="max-height:calc(100vh - 280px);overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
-          </div>
+            <div id="activity-log" style="max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
         </div>
+    </div>
 
-        <!-- Announce Tab -->
-        <div id="atab-announce" style="display:none">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div>
-              <div class="card" style="margin-bottom:16px">
-                <div class="card-title"><i class="fa-solid fa-bullhorn" style="color:var(--gold)"></i> Gửi thông báo cho tất cả</div>
-                <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-                  <select class="inp" id="announce-type">
-                    <option value="info">ℹ️ Thông tin</option>
-                    <option value="warning">⚠️ Cảnh báo</option>
-                    <option value="success">✅ Thành công</option>
-                    <option value="error">🚨 Khẩn cấp</option>
-                  </select>
-                  <input type="text" class="inp" id="announce-title" placeholder="Tiêu đề thông báo...">
-                  <textarea class="inp" id="announce-body" placeholder="Nội dung..." rows="3" style="resize:vertical;width:100%;box-sizing:border-box"></textarea>
-                  <button class="btn" onclick="sendAnnouncement('all')"><i class="fa-solid fa-paper-plane"></i> Gửi cho tất cả</button>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-title"><i class="fa-solid fa-user" style="color:var(--accent)"></i> Gửi cho từng user</div>
-                <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-                  <select class="inp" id="announce-target-user">
-                    <option value="">-- Chọn user --</option>
-                  </select>
-                  <select class="inp" id="announce-type2">
-                    <option value="info">ℹ️ Thông tin</option>
-                    <option value="warning">⚠️ Cảnh báo</option>
-                    <option value="success">✅ Thành công</option>
-                    <option value="error">🚨 Khẩn cấp</option>
-                  </select>
-                  <input type="text" class="inp" id="announce-title2" placeholder="Tiêu đề...">
-                  <textarea class="inp" id="announce-body2" placeholder="Nội dung..." rows="3" style="resize:vertical;width:100%;box-sizing:border-box"></textarea>
-                  <button class="btn purple" onclick="sendAnnouncement('user')"><i class="fa-solid fa-paper-plane"></i> Gửi cho user này</button>
-                </div>
-              </div>
-            </div>
-            <div class="card" style="height:fit-content">
-              <div class="card-title"><i class="fa-solid fa-list" style="color:var(--accent)"></i> Lịch sử thông báo</div>
-              <div id="announce-history" style="max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-top:14px">
-                <div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Chưa có thông báo.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- System Tab -->
-        <div id="atab-system" style="display:none">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-            <div class="card">
-              <div class="card-title"><i class="fa-solid fa-server" style="color:var(--accent)"></i> Thông tin hệ thống</div>
-              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">Platform</span><span style="font-size:13px;font-weight:700;color:var(--text)">Railway · ASP.NET 9</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">AI Model</span><span style="font-size:13px;font-weight:700;color:var(--text)">Llama 3.3 70B (Groq)</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">Database</span><span style="font-size:13px;font-weight:700;color:var(--green)">Firebase Realtime DB</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">Server Time</span><span style="font-size:13px;font-weight:700;color:var(--text)" id="sys-time">--</span>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-title"><i class="fa-solid fa-key" style="color:var(--gold)"></i> API Status</div>
-              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">GROQ API Key</span><span id="sys-groq-status" style="font-size:13px;font-weight:700">Checking...</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">Firebase</span><span style="font-size:13px;font-weight:700;color:var(--green)">● Connected</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border2)">
-                  <span style="font-size:13px;color:var(--text2)">Proxy /api/chat</span><span id="sys-proxy-status" style="font-size:13px;font-weight:700">Checking...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card" style="border-color:rgba(239,68,68,0.2)">
-            <div class="card-title" style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> Vùng nguy hiểm</div>
-            <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-                <div><div style="font-size:13px;font-weight:700;color:var(--text)">Xóa toàn bộ Activity Log</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Không thể hoàn tác</div></div>
-                <button class="btn sm" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid var(--red)" onclick="clearAllLogs()"><i class="fa-solid fa-trash"></i> Xóa log</button>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-                <div><div style="font-size:13px;font-weight:700;color:var(--text)">Export toàn bộ Users</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tải xuống file JSON</div></div>
-                <button class="btn sm ghost" onclick="exportUsers()"><i class="fa-solid fa-download"></i> Export JSON</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /admin-body -->
-    </div><!-- /admin-content -->
-  </div><!-- /admin-layout -->
+  </div>
 </div>
 
 <!-- Add User Modal -->
