@@ -1737,8 +1737,8 @@ async function doRegister() {
     const confirm = document.getElementById('reg-confirm').value;
     if (!username || !display || !password) return showAuthError('Please fill in all fields.');
     if (password !== confirm) return showAuthError('Passwords do not match.');
-    if (password.length < 6) return showAuthError('Password must be at least 6 characters.');
-    if (!/^[a-zA-Z0-9_ ]+$/.test(username)) return showAuthError('Username: letters, numbers, underscore, space only.');
+    // Không giới hạn độ dài password
+    // Không giới hạn ký tự username — cho phép tiếng Việt, ký tự đặc biệt
     showAuthError('⏳ Đang tạo tài khoản...');
     const users = await getUsers();
     if (users.find(u => u.username === username)) return showAuthError('Username already taken.');
@@ -2463,7 +2463,7 @@ async function doChangePass() {
     const users = await getUsers();
     const u = users.find(x => x.id === user.id); if (!u) return;
     if (u.password !== btoa(current)) { errEl.textContent = 'Current password is incorrect.'; errEl.style.display = 'block'; return; }
-    if (newPass.length < 6) { errEl.textContent = 'New password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+    // Không giới hạn độ dài password
     if (newPass !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
     u.password = btoa(newPass);
     await saveOneUser(u);
