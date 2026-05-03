@@ -1,6 +1,10 @@
 [build]
-builder = "NIXPACKS"
+# Dùng Dockerfile thay vì NIXPACKS để kiểm soát build chính xác hơn
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
