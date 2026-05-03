@@ -1324,148 +1324,300 @@ Ask me anything!</div>
 </div>
 
 <!-- ════ ADMIN PANEL ════ -->
-<div id="admin-panel" style="position:fixed;inset:0;background:rgba(7,11,20,0.98);z-index:8000;display:none;backdrop-filter:blur(10px);overflow-y:auto">
-  <div style="max-width:1200px;margin:0 auto;padding:32px">
+<style>
+.adm-wrap{display:flex;height:100vh;overflow:hidden}
+.adm-side{width:220px;min-width:220px;background:var(--bg1);border-right:1px solid var(--border2);display:flex;flex-direction:column}
+.adm-side-head{padding:20px 16px 16px;border-bottom:1px solid var(--border2)}
+.adm-nav{flex:1;padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.adm-nav-lbl{padding:8px 10px 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3)}
+.adm-nav-sep{height:1px;background:var(--border2);margin:6px 8px}
+.adm-btn{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;width:100%;text-align:left;font-family:"DM Sans",sans-serif;transition:0.15s}
+.adm-btn:hover{background:rgba(255,255,255,0.06);color:var(--text)}
+.adm-btn.active{background:rgba(59,130,246,0.14);color:var(--accent)}
+.adm-btn i{width:15px;text-align:center;font-size:13px}
+.adm-side-foot{padding:10px 8px;border-top:1px solid var(--border2)}
+.adm-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.adm-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--border2);background:var(--bg1);flex-shrink:0}
+.adm-body{flex:1;overflow-y:auto;padding:22px 24px}
+.adm-stat{display:flex;align-items:center;gap:11px;padding:13px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:12px}
+.adm-stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.adm-stat-val{font-family:"Syne",sans-serif;font-size:22px;font-weight:900;line-height:1}
+.adm-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+</style>
 
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border2)">
-      <div>
-        <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 20px rgba(59,130,246,0.35)">
-                <i class="fa-solid fa-gauge-high" style="color:white;font-size:18px"></i>
-            </div>
-            <div>
-                <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:900">Admin <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Dashboard</span></div>
-                <div style="color:var(--text3);font-size:12px;margin-top:2px" id="admin-last-refresh">Loading...</div>
-            </div>
+<div id="admin-panel" style="position:fixed;inset:0;z-index:8000;display:none;background:var(--bg)">
+<div class="adm-wrap">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="adm-side">
+    <div class="adm-side-head">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="fa-solid fa-gauge-high" style="color:white;font-size:14px"></i>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:900;color:var(--text)">Admin Panel</div>
+          <div style="font-size:10px;color:var(--text3)" id="admin-last-refresh">Loading...</div>
         </div>
       </div>
-      <div style="display:flex;gap:10px;align-items:center">
+    </div>
+
+    <div class="adm-nav">
+      <div class="adm-nav-lbl">Tổng quan</div>
+      <button id="anav-overview" class="adm-btn active" onclick="switchAdminTab('overview')">
+        <i class="fa-solid fa-chart-pie" style="color:var(--accent)"></i> Overview
+      </button>
+      <button id="anav-users" class="adm-btn" onclick="switchAdminTab('users')">
+        <i class="fa-solid fa-users" style="color:var(--accent2)"></i> Quản lý Users
+      </button>
+      <div class="adm-nav-sep"></div>
+      <div class="adm-nav-lbl">Theo dõi</div>
+      <button id="anav-activity" class="adm-btn" onclick="switchAdminTab('activity')">
+        <i class="fa-solid fa-chart-line" style="color:var(--green)"></i> Activity Log
+      </button>
+      <button id="anav-announce" class="adm-btn" onclick="switchAdminTab('announce')">
+        <i class="fa-solid fa-bullhorn" style="color:var(--gold)"></i> Thông báo
+      </button>
+      <div class="adm-nav-sep"></div>
+      <div class="adm-nav-lbl">Hệ thống</div>
+      <button id="anav-system" class="adm-btn" onclick="switchAdminTab('system')">
+        <i class="fa-solid fa-gear" style="color:var(--text2)"></i> Hệ thống
+      </button>
+    </div>
+
+    <div class="adm-side-foot">
+      <button class="adm-btn" style="color:var(--red)" onclick="closeAdmin()">
+        <i class="fa-solid fa-right-from-bracket" style="color:var(--red)"></i> Exit Dashboard
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="adm-main">
+
+    <!-- Topbar -->
+    <div class="adm-topbar">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:900;color:var(--text)" id="admin-page-title">
+        <i class="fa-solid fa-chart-pie" style="color:var(--accent);margin-right:8px"></i>Overview
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;gap:8px">
+          <div style="padding:5px 12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;text-align:center">
+            <div style="font-size:9px;color:var(--text3)">USERS</div>
+            <div style="font-size:15px;font-weight:900;color:var(--accent)" id="stat-total">0</div>
+          </div>
+          <div style="padding:5px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;text-align:center">
+            <div style="font-size:9px;color:var(--green)">ONLINE</div>
+            <div style="font-size:15px;font-weight:900;color:var(--green)" id="stat-online">0</div>
+          </div>
+          <div style="padding:5px 12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;text-align:center">
+            <div style="font-size:9px;color:var(--red)">BANNED</div>
+            <div style="font-size:15px;font-weight:900;color:var(--red)" id="stat-banned">0</div>
+          </div>
+        </div>
         <button class="btn sm ghost" onclick="refreshAdmin()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-        <button class="btn ghost" onclick="closeAdmin()" style="color:var(--red)"><i class="fa-solid fa-xmark"></i> Close</button>
       </div>
     </div>
 
-    <!-- Stats Row -->
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px" id="admin-stats-row">
-      <div class="card" style="text-align:center;padding:16px">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Total Users</div>
-        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--accent)" id="stat-total">0</div>
-      </div>
-      <div class="card" style="text-align:center;padding:16px;border-color:rgba(16,185,129,0.3)">
-        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🟢 Online Now</div>
-        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--green)" id="stat-online">0</div>
-      </div>
-      <div class="card" style="text-align:center;padding:16px">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Active Today</div>
-        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--accent3)" id="stat-active">0</div>
-      </div>
-      <div class="card" style="text-align:center;padding:16px">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Admins</div>
-        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--accent2)" id="stat-admins">0</div>
-      </div>
-      <div class="card" style="text-align:center;padding:16px">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Moderators</div>
-        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--gold)" id="stat-mods">0</div>
-      </div>
-      <div class="card" style="text-align:center;padding:16px;border-color:rgba(239,68,68,0.25)">
-        <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Banned</div>
-        <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:900;color:var(--red)" id="stat-banned">0</div>
-      </div>
-    </div>
+    <div class="adm-body">
 
-    <!-- Tab Nav -->
-    <div style="display:flex;gap:4px;margin-bottom:20px;background:rgba(255,255,255,0.03);border-radius:12px;padding:4px;border:1px solid var(--border2)">
-        <button id="anav-overview" onclick="switchAdminTab('overview')" style="flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.2s;background:rgba(59,130,246,0.15);color:var(--accent)">
-            <i class="fa-solid fa-chart-pie"></i> Overview
-        </button>
-        <button id="anav-users" onclick="switchAdminTab('users')" style="flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.2s;background:transparent;color:var(--text2)">
-            <i class="fa-solid fa-users"></i> Users
-        </button>
-        <button id="anav-activity" onclick="switchAdminTab('activity')" style="flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.2s;background:transparent;color:var(--text2)">
-            <i class="fa-solid fa-chart-line"></i> Activity Log
-        </button>
-    </div>
-
-    <!-- Overview Tab -->
-    <div id="atab-overview">
-        <!-- Online Users -->
-        <div class="card" style="margin-bottom:20px;border-color:rgba(16,185,129,0.2)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-                <div class="card-title" style="margin:0;color:var(--green)"><i class="fa-solid fa-circle" style="font-size:10px;color:var(--green);animation:pulse 2s infinite"></i> Users Online Now</div>
-                <span id="online-count-badge" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--green);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">0 online</span>
-            </div>
-            <div id="online-users-list" style="display:flex;flex-wrap:wrap;gap:8px">
-                <div style="color:var(--text3);font-size:13px;padding:12px">No users currently online.</div>
-            </div>
+      <!-- Mini stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        <div class="adm-stat">
+          <div class="adm-stat-icon" style="background:rgba(59,130,246,0.12)"><i class="fa-solid fa-users" style="color:var(--accent)"></i></div>
+          <div><div class="adm-stat-val" style="color:var(--accent)" id="stat-total2">0</div><div class="adm-stat-lbl">Total Users</div></div>
         </div>
-        <!-- Recent Activity Preview -->
+        <div class="adm-stat" style="border-color:rgba(16,185,129,0.25)">
+          <div class="adm-stat-icon" style="background:rgba(16,185,129,0.12)"><i class="fa-solid fa-circle" style="color:var(--green);font-size:10px"></i></div>
+          <div><div class="adm-stat-val" style="color:var(--green)" id="stat-active">0</div><div class="adm-stat-lbl">Active Today</div></div>
+        </div>
+        <div class="adm-stat">
+          <div class="adm-stat-icon" style="background:rgba(139,92,246,0.12)"><i class="fa-solid fa-shield-halved" style="color:var(--accent2)"></i></div>
+          <div><div class="adm-stat-val" style="color:var(--accent2)" id="stat-admins">0</div><div class="adm-stat-lbl">Admins</div></div>
+        </div>
+        <div class="adm-stat">
+          <div class="adm-stat-icon" style="background:rgba(245,158,11,0.12)"><i class="fa-solid fa-bolt" style="color:var(--gold)"></i></div>
+          <div><div class="adm-stat-val" style="color:var(--gold)" id="stat-mods">0</div><div class="adm-stat-lbl">Moderators</div></div>
+        </div>
+      </div>
+
+      <!-- ── OVERVIEW TAB ── -->
+      <div id="atab-overview">
+        <div class="card" style="margin-bottom:16px;border-color:rgba(16,185,129,0.2)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="card-title" style="margin:0;color:var(--green)">
+              <i class="fa-solid fa-circle" style="font-size:9px;animation:pulse 2s infinite"></i> Users Online Now
+            </div>
+            <span id="online-count-badge" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--green);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">0 online</span>
+          </div>
+          <div id="online-users-list" style="display:flex;flex-wrap:wrap;gap:8px">
+            <div style="color:var(--text3);font-size:13px;padding:10px">No users currently online.</div>
+          </div>
+        </div>
         <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-                <div class="card-title" style="margin:0"><i class="fa-solid fa-bolt" style="color:var(--gold)"></i> Recent Activity</div>
-                <button onclick="switchAdminTab('activity')" class="btn sm ghost"><i class="fa-solid fa-arrow-right"></i> View All</button>
-            </div>
-            <div id="activity-log-preview" style="display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="card-title" style="margin:0"><i class="fa-solid fa-bolt" style="color:var(--gold)"></i> Recent Activity</div>
+            <button onclick="switchAdminTab('activity')" class="btn sm ghost"><i class="fa-solid fa-arrow-right"></i> View All</button>
+          </div>
+          <div id="activity-log-preview" style="display:flex;flex-direction:column;gap:6px;max-height:380px;overflow-y:auto"></div>
         </div>
-    </div>
+      </div>
 
-    <!-- Users Tab -->
-    <div id="atab-users" style="display:none">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-          <div class="card-title" style="margin:0"><i class="fa-solid fa-users" style="color:var(--accent)"></i> User Management</div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <input type="text" class="inp" placeholder="🔍 Search users..." style="width:200px" oninput="renderAdminUsers(this.value)">
-            <select class="inp" style="width:130px" onchange="filterAdminUsers(this.value)" id="user-role-filter">
+      <!-- ── USERS TAB ── -->
+      <div id="atab-users" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+            <div class="card-title" style="margin:0"><i class="fa-solid fa-users" style="color:var(--accent)"></i> User Management</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input type="text" class="inp" placeholder="🔍 Search users..." style="width:180px" oninput="renderAdminUsers(this.value)">
+              <select class="inp" style="width:120px" onchange="filterAdminUsers(this.value)" id="user-role-filter">
                 <option value="">All roles</option>
                 <option value="admin">Admin</option>
                 <option value="moderator">Moderator</option>
                 <option value="user">User</option>
-            </select>
-            <button class="btn sm" onclick="openAddUserModal()"><i class="fa-solid fa-plus"></i> Add User</button>
+              </select>
+              <button class="btn sm" onclick="openAddUserModal()"><i class="fa-solid fa-plus"></i> Add User</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px" id="admin-user-table">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border2)">
+                  <th style="text-align:left;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">User</th>
+                  <th style="text-align:left;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Role</th>
+                  <th style="text-align:left;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Status</th>
+                  <th style="text-align:left;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Last Active</th>
+                  <th style="text-align:left;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Actions</th>
+                  <th style="text-align:left;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Features</th>
+                  <th style="text-align:right;padding:9px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">⋮</th>
+                </tr>
+              </thead>
+              <tbody id="admin-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:13px" id="admin-user-table">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border2)">
-                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">User</th>
-                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Role</th>
-                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Status</th>
-                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Last Active</th>
-                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Actions</th>
-                <th style="text-align:left;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">Features</th>
-                <th style="text-align:right;padding:10px 12px;color:var(--text3);font-weight:700;text-transform:uppercase;font-size:11px">⋮</th>
-              </tr>
-            </thead>
-            <tbody id="admin-tbody"></tbody>
-          </table>
+      </div>
+
+      <!-- ── ACTIVITY TAB ── -->
+      <div id="atab-activity" style="display:none">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <div class="card-title" style="margin:0"><i class="fa-solid fa-chart-line" style="color:var(--green)"></i> Full Activity Log</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select class="inp" style="width:130px" id="log-type-filter" onchange="renderActivityLog()">
+                <option value="">All types</option>
+                <option value="login">Login</option>
+                <option value="logout">Logout</option>
+                <option value="register">Register</option>
+                <option value="admin">Admin</option>
+                <option value="info">Info</option>
+              </select>
+              <input type="text" class="inp" placeholder="🔍 Search logs..." style="width:170px" id="log-search" oninput="renderActivityLog()">
+              <button class="btn sm ghost" onclick="exportActivityLog()"><i class="fa-solid fa-download"></i> Export</button>
+            </div>
+          </div>
+          <div id="activity-log" style="max-height:calc(100vh - 300px);overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
         </div>
       </div>
-    </div>
 
-    <!-- Activity Tab -->
-    <div id="atab-activity" style="display:none">
-        <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-                <div class="card-title" style="margin:0"><i class="fa-solid fa-chart-line" style="color:var(--green)"></i> Full Activity Log</div>
-                <div style="display:flex;gap:8px;align-items:center">
-                    <select class="inp" style="width:140px" id="log-type-filter" onchange="renderActivityLog()">
-                        <option value="">All types</option>
-                        <option value="login">Login</option>
-                        <option value="logout">Logout</option>
-                        <option value="register">Register</option>
-                        <option value="admin">Admin</option>
-                        <option value="info">Info</option>
-                    </select>
-                    <input type="text" class="inp" placeholder="🔍 Search logs..." style="width:180px" id="log-search" oninput="renderActivityLog()">
-                </div>
+      <!-- ── ANNOUNCE TAB ── -->
+      <div id="atab-announce" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-title"><i class="fa-solid fa-globe" style="color:var(--accent)"></i> Gửi cho tất cả người dùng</div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+                <select class="inp" id="announce-type">
+                  <option value="info">ℹ️ Thông tin</option>
+                  <option value="warning">⚠️ Cảnh báo</option>
+                  <option value="success">✅ Thành công</option>
+                  <option value="error">🚨 Khẩn cấp</option>
+                </select>
+                <input type="text" class="inp" id="announce-title" placeholder="Tiêu đề thông báo...">
+                <textarea class="inp" id="announce-body" placeholder="Nội dung..." rows="4" style="resize:vertical;width:100%;box-sizing:border-box"></textarea>
+                <button class="btn" onclick="sendAnnouncement('all')"><i class="fa-solid fa-paper-plane"></i> Gửi cho tất cả</button>
+              </div>
             </div>
-            <div id="activity-log" style="max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+            <div class="card">
+              <div class="card-title"><i class="fa-solid fa-user-check" style="color:var(--accent2)"></i> Gửi cho từng user</div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+                <select class="inp" id="announce-target-user">
+                  <option value="">-- Chọn user --</option>
+                </select>
+                <select class="inp" id="announce-type2">
+                  <option value="info">ℹ️ Thông tin</option>
+                  <option value="warning">⚠️ Cảnh báo</option>
+                  <option value="success">✅ Thành công</option>
+                  <option value="error">🚨 Khẩn cấp</option>
+                </select>
+                <input type="text" class="inp" id="announce-title2" placeholder="Tiêu đề...">
+                <textarea class="inp" id="announce-body2" placeholder="Nội dung..." rows="3" style="resize:vertical;width:100%;box-sizing:border-box"></textarea>
+                <button class="btn" style="background:linear-gradient(135deg,var(--accent2),#6d28d9)" onclick="sendAnnouncement('user')"><i class="fa-solid fa-paper-plane"></i> Gửi cho user này</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold)"></i> Lịch sử thông báo</div>
+            <div id="announce-history" style="margin-top:14px;max-height:calc(100vh - 260px);overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+              <div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Chưa có thông báo nào.</div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
-  </div>
+      <!-- ── SYSTEM TAB ── -->
+      <div id="atab-system" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-title"><i class="fa-solid fa-server" style="color:var(--accent)"></i> Thông tin hệ thống</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">Platform</span><span style="font-size:12px;font-weight:700;color:var(--text)">Railway · ASP.NET 9</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">AI Model</span><span style="font-size:12px;font-weight:700;color:var(--text)">Llama 3.3 70B (Groq)</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">Database</span><span style="font-size:12px;font-weight:700;color:var(--green)">Firebase Realtime DB</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">Server Time</span><span style="font-size:12px;font-weight:700;color:var(--text)" id="sys-time">--</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa-solid fa-key" style="color:var(--gold)"></i> API Status</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">GROQ API Key</span><span id="sys-groq-status" style="font-size:12px;font-weight:700">Checking...</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">Firebase</span><span style="font-size:12px;font-weight:700;color:var(--green)">● Connected</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid var(--border2)">
+                <span style="font-size:12px;color:var(--text2)">Proxy /api/chat</span><span id="sys-proxy-status" style="font-size:12px;font-weight:700">Checking...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,0.2)">
+          <div class="card-title" style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> Vùng nguy hiểm</div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:10px">
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Xóa toàn bộ Activity Log</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Không thể hoàn tác</div></div>
+              <button class="btn sm" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid var(--red)" onclick="clearAllLogs()"><i class="fa-solid fa-trash"></i> Xóa log</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:10px">
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Export toàn bộ Users</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Tải xuống file JSON</div></div>
+              <button class="btn sm ghost" onclick="exportUsers()"><i class="fa-solid fa-download"></i> Export JSON</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /adm-body -->
+  </div><!-- /adm-main -->
+</div><!-- /adm-wrap -->
 </div>
 
 <!-- Add User Modal -->
