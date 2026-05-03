@@ -1781,10 +1781,6 @@ function onLoginSuccess(user) {
     }
     _heartbeat();
     setInterval(_heartbeat, 3 * 60 * 1000); // every 3 min
-
-    // ── Notification polling ──
-    checkNewNotifications();
-    setInterval(checkNewNotifications, 60 * 1000); // every 1 min
 }
 
 async function doLogout() {
@@ -1799,6 +1795,13 @@ let _adminAutoRefresh = null;
 
 function switchAdminTab(tab) {
     _adminTab = tab;
+    const titles = {
+        overview: '<i class="fa-solid fa-chart-pie" style="color:var(--accent);margin-right:8px"></i>Overview',
+        users: '<i class="fa-solid fa-users" style="color:var(--accent2);margin-right:8px"></i>Quản lý Users',
+        activity: '<i class="fa-solid fa-chart-line" style="color:var(--green);margin-right:8px"></i>Activity Log',
+        announce: '<i class="fa-solid fa-bullhorn" style="color:var(--gold);margin-right:8px"></i>Thông báo',
+        system: '<i class="fa-solid fa-gear" style="margin-right:8px"></i>Hệ thống'
+    };
     ['overview','users','activity','announce','system'].forEach(t => {
         const el = document.getElementById('atab-' + t);
         const nav = document.getElementById('anav-' + t);
@@ -1807,6 +1810,8 @@ function switchAdminTab(tab) {
             nav.classList.toggle('active', t === tab);
         }
     });
+    const titleEl = document.getElementById('admin-page-title');
+    if (titleEl) titleEl.innerHTML = titles[tab] || tab;
     if (tab === 'users') { renderAdminUsers(); loadAnnounceUserList(); }
     if (tab === 'activity') renderActivityLog();
     if (tab === 'announce') { renderAnnounceHistory(); loadAnnounceUserList(); }
@@ -1840,8 +1845,7 @@ async function refreshAdmin() {
     await renderAdminStats();
     await renderOnlineUsers();
     await renderActivityPreview();
-    await renderAnnounceHistory();
-    refreshSystemStatus();
+    loadUserNotifications();
     const now = new Date();
     const el = document.getElementById('admin-last-refresh');
     if (el) el.textContent = `Last refreshed: ${now.toLocaleTimeString('vi-VN')}`;
@@ -1854,9 +1858,7 @@ function refreshSystemStatus() {
     fetch('/api/health').then(r => r.json()).then(d => {
         const groqEl = document.getElementById('sys-groq-status');
         const proxyEl = document.getElementById('sys-proxy-status');
-        if (groqEl) groqEl.innerHTML = d.hasKey
-            ? '<span style="color:var(--green)">● Configured</span>'
-            : '<span style="color:var(--red)">● Missing</span>';
+        if (groqEl) groqEl.innerHTML = d.hasKey ? '<span style="color:var(--green)">● Configured</span>' : '<span style="color:var(--red)">● Missing</span>';
         if (proxyEl) proxyEl.innerHTML = '<span style="color:var(--green)">● Online</span>';
     }).catch(() => {
         const proxyEl = document.getElementById('sys-proxy-status');
@@ -1891,59 +1893,60 @@ function exportActivityLog() {
     });
 }
 
-// ─── ANNOUNCEMENT TAB ───
-let _announceTarget = 'all';
-function setAnnounceTarget(t) {
-    _announceTarget = t;
-    const allBtn = document.getElementById('ann-target-all');
-    const userBtn = document.getElementById('ann-target-user');
-    const userSel = document.getElementById('announce-target-user');
-    if (!allBtn) return;
-    if (t === 'all') {
-        allBtn.style.borderColor = 'var(--accent)'; allBtn.style.background = 'rgba(59,130,246,0.15)'; allBtn.style.color = 'var(--accent)';
-        userBtn.style.borderColor = 'var(--border2)'; userBtn.style.background = 'transparent'; userBtn.style.color = 'var(--text2)';
-        userSel.style.display = 'none';
-    } else {
-        userBtn.style.borderColor = 'var(--accent)'; userBtn.style.background = 'rgba(59,130,246,0.15)'; userBtn.style.color = 'var(--accent)';
-        allBtn.style.borderColor = 'var(--border2)'; allBtn.style.background = 'transparent'; allBtn.style.color = 'var(--text2)';
-        userSel.style.display = 'block';
-        loadAnnounceUserList();
-    }
-}
-
+// ─── ANNOUNCEMENT ───
 async function loadAnnounceUserList() {
     const sel = document.getElementById('announce-target-user');
     if (!sel) return;
-    const users = await getUsers();
-    sel.innerHTML = '<option value="">-- Chọn user --</option>' + users.map(u => `<option value="${u.username}">${u.displayName} (@${u.username})</option>`).join('');
+    try {
+        const users = await getUsers();
+        sel.innerHTML = '<option value="">-- Chọn user --</option>';
+        if (users) {
+            Object.values(users).forEach(u => {
+                if (u.uid) {
+                    const opt = document.createElement('option');
+                    opt.value = u.uid;
+                    opt.textContent = `${u.displayName || u.username} (@${u.username})`;
+                    sel.appendChild(opt);
+                }
+            });
+        }
+    } catch(e) {}
 }
 
-async function sendAnnouncement() {
-    const type = document.getElementById('announce-type').value;
-    const title = document.getElementById('announce-title').value.trim();
-    const body = document.getElementById('announce-body').value.trim();
+async function sendAnnouncement(target) {
+    let type, title, body, targetUid = null;
+    if (target === 'all') {
+        type = document.getElementById('announce-type').value;
+        title = document.getElementById('announce-title').value.trim();
+        body = document.getElementById('announce-body').value.trim();
+    } else {
+        type = document.getElementById('announce-type2').value;
+        title = document.getElementById('announce-title2').value.trim();
+        body = document.getElementById('announce-body2').value.trim();
+        targetUid = document.getElementById('announce-target-user').value;
+        if (!targetUid) return alert('Vui lòng chọn user!');
+    }
     if (!title || !body) return alert('Vui lòng điền đầy đủ tiêu đề và nội dung.');
     const user = getCurrentUser();
-    const targetUsername = _announceTarget === 'user' ? (document.getElementById('announce-target-user')?.value || '') : '';
-    if (_announceTarget === 'user' && !targetUsername) return alert('Vui lòng chọn người dùng cụ thể.');
     const announce = {
         id: Date.now(), type, title, body,
+        target: target === 'all' ? 'all' : targetUid,
         sentBy: user?.displayName || 'Admin',
         sentAt: new Date().toISOString(),
-        target: _announceTarget === 'user' ? targetUsername : 'all'
+        readBy: {}
     };
     await fbPush('announcements', announce);
-    await logActivity(`Admin sent announcement${_announceTarget === 'user' ? ` to @${targetUsername}` : ' to all'}: "${title}"`, 'admin');
+    await logActivity(`Admin sent announcement: "${title}" → ${target === 'all' ? 'All users' : 'User ' + targetUid}`, 'admin');
     alert('✅ Đã gửi thông báo!');
-    clearAnnouncement();
+    // Clear fields
+    if (target === 'all') {
+        document.getElementById('announce-title').value = '';
+        document.getElementById('announce-body').value = '';
+    } else {
+        document.getElementById('announce-title2').value = '';
+        document.getElementById('announce-body2').value = '';
+    }
     renderAnnounceHistory();
-}
-
-function clearAnnouncement() {
-    const t = document.getElementById('announce-title');
-    const b = document.getElementById('announce-body');
-    if (t) t.value = '';
-    if (b) b.value = '';
 }
 
 async function renderAnnounceHistory() {
@@ -1951,128 +1954,104 @@ async function renderAnnounceHistory() {
     if (!el) return;
     try {
         const data = await fbGet('announcements');
-        if (!data) {
-            el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Chưa có thông báo nào.</div>';
-            return;
-        }
-        const list = Object.values(data).reverse().slice(0, 20);
-        const typeColor = { info: 'var(--accent)', warning: 'var(--gold)', success: 'var(--green)', error: 'var(--red)' };
-        const typeIcon  = { info: 'fa-circle-info', warning: 'fa-triangle-exclamation', success: 'fa-circle-check', error: 'fa-circle-exclamation' };
+        if (!data) { el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Chưa có thông báo nào.</div>'; return; }
+        const list = Object.values(data).reverse().slice(0, 30);
+        const typeColor = { info:'var(--accent)', warning:'var(--gold)', success:'var(--green)', error:'var(--red)' };
+        const typeIcon  = { info:'fa-circle-info', warning:'fa-triangle-exclamation', success:'fa-circle-check', error:'fa-circle-exclamation' };
         el.innerHTML = list.map(a => `
-            <div style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-left:3px solid ${typeColor[a.type]||'var(--accent)'};border-radius:10px">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                    <i class="fa-solid ${typeIcon[a.type]||'fa-circle-info'}" style="color:${typeColor[a.type]||'var(--accent)'}"></i>
-                    <span style="font-weight:700;font-size:14px;color:var(--text)">${a.title}</span>
-                    <span style="margin-left:auto;font-size:10px;color:var(--text3)">${new Date(a.sentAt).toLocaleString('vi-VN')}</span>
-                </div>
-                <div style="font-size:13px;color:var(--text2);margin-bottom:6px">${a.body}</div>
-                <div style="font-size:11px;color:var(--text3);display:flex;gap:12px">
-                    <span>Gửi bởi: ${a.sentBy}</span>
-                    <span>→ ${a.target === 'all' ? '<i class="fa-solid fa-globe"></i> Tất cả' : `<i class="fa-solid fa-user"></i> @${a.target}`}</span>
-                </div>
-            </div>`).join('');
-    } catch(e) {
-        el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Lỗi tải thông báo.</div>';
-    }
-}
-
-// ─── USER NOTIFICATIONS ───
-let _notifReadIds = JSON.parse(localStorage.getItem('notif_read') || '[]');
-
-async function openNotifications() {
-    document.getElementById('notif-panel').style.display = 'flex';
-    document.getElementById('notif-backdrop').style.display = 'block';
-    await renderUserNotifications();
-}
-
-function closeNotifications() {
-    document.getElementById('notif-panel').style.display = 'none';
-    document.getElementById('notif-backdrop').style.display = 'none';
-}
-
-async function renderUserNotifications() {
-    const user = getCurrentUser();
-    const el = document.getElementById('notif-list');
-    if (!el || !user) return;
-    try {
-        const data = await fbGet('announcements');
-        if (!data) {
-            el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 20px"><i class="fa-solid fa-bell-slash" style="font-size:32px;margin-bottom:12px;display:block;opacity:0.4"></i>Chưa có thông báo nào.</div>';
-            return;
-        }
-        // Filter by target: 'all' or this user's username
-        const list = Object.values(data)
-            .filter(a => a.target === 'all' || a.target === user.username)
-            .sort((a,b) => new Date(b.sentAt) - new Date(a.sentAt))
-            .slice(0, 50);
-        if (!list.length) {
-            el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 20px"><i class="fa-solid fa-bell-slash" style="font-size:32px;margin-bottom:12px;display:block;opacity:0.4"></i>Chưa có thông báo nào dành cho bạn.</div>';
-            return;
-        }
-        const typeColor = { info: 'var(--accent)', warning: 'var(--gold)', success: 'var(--green)', error: 'var(--red)' };
-        const typeIcon  = { info: 'fa-circle-info', warning: 'fa-triangle-exclamation', success: 'fa-circle-check', error: 'fa-circle-exclamation' };
-        el.innerHTML = list.map(a => {
-            const isRead = _notifReadIds.includes(String(a.id));
-            return `<div onclick="markNotifRead('${a.id}')" style="padding:14px;border-radius:12px;border:1px solid ${isRead?'var(--border2)':'rgba(59,130,246,0.3)'};background:${isRead?'rgba(255,255,255,0.02)':'rgba(59,130,246,0.05)'};cursor:pointer;transition:0.2s;position:relative" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='${isRead?'rgba(255,255,255,0.02)':'rgba(59,130,246,0.05)'}'">
-                ${!isRead?`<div style="position:absolute;top:12px;right:12px;width:8px;height:8px;background:var(--accent);border-radius:50%"></div>`:''}
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-left:3px solid ${typeColor[a.type]||'var(--accent)'};border-radius:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                     <i class="fa-solid ${typeIcon[a.type]||'fa-circle-info'}" style="color:${typeColor[a.type]||'var(--accent)'}"></i>
                     <span style="font-weight:700;font-size:13px;color:var(--text)">${a.title}</span>
+                    <span style="margin-left:auto;font-size:10px;color:var(--text3)">${new Date(a.sentAt).toLocaleString('vi-VN')}</span>
                 </div>
-                <div style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.5">${a.body}</div>
-                <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between">
-                    <span>${a.sentBy}</span>
-                    <span>${new Date(a.sentAt).toLocaleString('vi-VN')}</span>
+                <div style="font-size:12px;color:var(--text2);margin-bottom:4px">${a.body}</div>
+                <div style="font-size:10px;color:var(--text3)">Gửi bởi: ${a.sentBy} · Đến: ${a.target === 'all' ? '🌐 Tất cả' : '👤 User cụ thể'}</div>
+            </div>`).join('');
+    } catch(e) { el.innerHTML = '<div style="color:var(--red);font-size:13px;padding:12px">Lỗi tải thông báo.</div>'; }
+}
+
+// ─── USER NOTIFICATION BELL ───
+function toggleNotifDropdown() {
+    const dd = document.getElementById('notif-dropdown');
+    if (dd) dd.classList.toggle('open');
+}
+
+async function loadUserNotifications() {
+    const user = getCurrentUser();
+    if (!user || !user.uid) return;
+    try {
+        const data = await fbGet('announcements');
+        if (!data) return;
+        const myNotifs = Object.values(data).filter(a =>
+            a.target === 'all' || a.target === user.uid
+        ).reverse().slice(0, 20);
+        const unread = myNotifs.filter(a => !a.readBy || !a.readBy[user.uid]);
+        // Update badge
+        const badge = document.getElementById('notif-badge');
+        if (badge) {
+            badge.style.display = unread.length > 0 ? 'flex' : 'none';
+            badge.textContent = unread.length > 9 ? '9+' : unread.length;
+        }
+        // Render list
+        const list = document.getElementById('notif-list');
+        if (!list) return;
+        if (myNotifs.length === 0) {
+            list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Không có thông báo nào</div>';
+            return;
+        }
+        const typeColor = { info:'var(--accent)', warning:'var(--gold)', success:'var(--green)', error:'var(--red)' };
+        const typeIcon  = { info:'fa-circle-info', warning:'fa-triangle-exclamation', success:'fa-circle-check', error:'fa-circle-exclamation' };
+        list.innerHTML = myNotifs.map(n => `
+            <div class="notif-item ${(!n.readBy || !n.readBy[user.uid]) ? 'unread' : ''}" onclick="markNotifRead('${n.id}')">
+                <div style="display:flex;align-items:flex-start;gap:10px">
+                    <i class="fa-solid ${typeIcon[n.type]||'fa-circle-info'}" style="color:${typeColor[n.type]||'var(--accent)'};margin-top:2px;font-size:13px"></i>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-weight:700;font-size:13px;color:var(--text)">${n.title}</div>
+                        <div style="font-size:12px;color:var(--text2);margin-top:2px">${n.body}</div>
+                        <div style="font-size:10px;color:var(--text3);margin-top:4px">${new Date(n.sentAt).toLocaleString('vi-VN')}</div>
+                    </div>
                 </div>
-            </div>`;
-        }).join('');
-        updateNotifBadge(list);
-        const unread = list.filter(a => !_notifReadIds.includes(String(a.id))).length;
-        const lbl = document.getElementById('notif-unread-lbl');
-        if (lbl) lbl.textContent = unread > 0 ? `${unread} thông báo chưa đọc` : 'Tất cả đã đọc';
-    } catch(e) {
-        el.innerHTML = '<div style="color:var(--red);font-size:13px;text-align:center;padding:20px">Lỗi tải thông báo.</div>';
-    }
+            </div>`).join('');
+    } catch(e) {}
 }
 
-function markNotifRead(id) {
-    if (!_notifReadIds.includes(String(id))) {
-        _notifReadIds.push(String(id));
-        localStorage.setItem('notif_read', JSON.stringify(_notifReadIds));
-        renderUserNotifications();
-    }
-}
-
-async function markAllNotifsRead() {
-    const user = getCurrentUser();
-    const data = await fbGet('announcements');
-    if (data) {
-        Object.values(data)
-            .filter(a => a.target === 'all' || a.target === (user?.username || ''))
-            .forEach(a => { if (!_notifReadIds.includes(String(a.id))) _notifReadIds.push(String(a.id)); });
-        localStorage.setItem('notif_read', JSON.stringify(_notifReadIds));
-        renderUserNotifications();
-    }
-}
-
-function updateNotifBadge(list) {
-    const user = getCurrentUser();
-    if (!user || !list) return;
-    const unread = list.filter(a => !_notifReadIds.includes(String(a.id))).length;
-    const badge = document.getElementById('notif-badge');
-    if (badge) badge.style.display = unread > 0 ? 'block' : 'none';
-}
-
-async function checkNewNotifications() {
+async function markNotifRead(notifId) {
     const user = getCurrentUser();
     if (!user) return;
     try {
         const data = await fbGet('announcements');
         if (!data) return;
-        const list = Object.values(data).filter(a => a.target === 'all' || a.target === user.username);
-        updateNotifBadge(list);
+        const key = Object.keys(data).find(k => data[k].id == notifId);
+        if (key) await fbSet(`announcements/${key}/readBy/${user.uid}`, true);
+        loadUserNotifications();
     } catch(e) {}
 }
+
+async function markAllRead() {
+    const user = getCurrentUser();
+    if (!user) return;
+    try {
+        const data = await fbGet('announcements');
+        if (!data) return;
+        for (const key of Object.keys(data)) {
+            const a = data[key];
+            if ((a.target === 'all' || a.target === user.uid) && (!a.readBy || !a.readBy[user.uid])) {
+                await fbSet(`announcements/${key}/readBy/${user.uid}`, true);
+            }
+        }
+        loadUserNotifications();
+    } catch(e) {}
+}
+
+// Close notif dropdown when clicking outside
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('notif-bell-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+        const dd = document.getElementById('notif-dropdown');
+        if (dd) dd.classList.remove('open');
+    }
+});
 
 async function renderOnlineUsers() {
     // "Online" = lastActive within past 10 minutes (tracked via Firebase heartbeat)
