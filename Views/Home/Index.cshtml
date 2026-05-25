@@ -701,65 +701,111 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
     <!-- Image translate input -->
     <input type="file" id="img-trans-input" accept="image/*" style="display:none" onchange="translateImage(event)">
 
+    <!-- Mode selector bar -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:14px;flex-wrap:wrap">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px;white-space:nowrap">
+            <i class="fa-solid fa-sliders" style="color:var(--accent);margin-right:4px"></i>Ngữ cảnh dịch:
+        </div>
+        <select id="trans-mode" class="inp" style="width:auto;min-width:160px;padding:5px 10px;font-size:12px;font-weight:600" onchange="autoTranslate()">
+            <option value="auto">🔄 Tự động (Auto-detect)</option>
+            <option value="formal">🏢 Trang trọng / Formal</option>
+            <option value="casual">😊 Thông thường / Casual</option>
+            <option value="academic">🎓 Học thuật / Academic</option>
+            <option value="technical">⚙️ Kỹ thuật / Technical</option>
+            <option value="creative">✨ Sáng tạo / Creative</option>
+        </select>
+        <div style="margin-left:auto;display:flex;gap:6px">
+            <button id="tab-text-btn" onclick="switchTransTab('text')" style="padding:5px 12px;border-radius:8px;border:1px solid var(--accent);background:rgba(59,130,246,0.15);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
+                <i class="fa-solid fa-pen-line" style="font-size:11px"></i> Text
+            </button>
+            <button id="tab-img-btn" onclick="switchTransTab('image')" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
+                <i class="fa-solid fa-image" style="font-size:11px"></i> Image
+            </button>
+        </div>
+    </div>
+
     <div class="translate-main">
         <div class="trans-pane">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                <div class="trans-lang" style="margin-bottom:0"><i class="fa-solid fa-circle" style="color:var(--accent);font-size:8px"></i> SOURCE</div>
-                <div style="display:flex;gap:6px">
-                    <button id="tab-text-btn" onclick="switchTransTab('text')"
-                        style="padding:5px 12px;border-radius:8px;border:1px solid var(--accent);background:rgba(59,130,246,0.15);
-                               color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
-                        ✏️ Text
-                    </button>
-                    <button id="tab-img-btn" onclick="switchTransTab('image')"
-                        style="padding:5px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;
-                               color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
-                        🖼️ Image
-                    </button>
+            <div style="display:flex;align-items:center;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">
+                    <i class="fa-solid fa-circle" style="color:var(--accent);font-size:7px"></i> NGUỒN VĂN BẢN
                 </div>
             </div>
 
             <!-- Text tab -->
             <div id="trans-tab-text">
-                <textarea id="trans-input" class="inp" style="min-height:200px;background:transparent;border:none;font-size:16px;line-height:1.8"
-                    placeholder="Type in English, Vietnamese, or any language...&#10;&#10;AI will auto-detect and translate." oninput="autoTranslate()"></textarea>
+                <textarea id="trans-input" class="inp" style="min-height:220px;background:transparent;border:none;font-size:15px;line-height:1.8;resize:vertical"
+                    placeholder="Nhập văn bản bằng bất kỳ ngôn ngữ nào...&#10;AI sẽ tự nhận diện và dịch theo ngữ cảnh đã chọn." oninput="autoTranslate()"></textarea>
             </div>
 
             <!-- Image tab -->
             <div id="trans-tab-image" style="display:none">
                 <div id="img-drop-zone" onclick="document.getElementById('img-trans-input').click()"
-                    style="min-height:200px;border:2px dashed rgba(59,130,246,0.3);border-radius:14px;
-                           display:flex;flex-direction:column;align-items:center;justify-content:center;
-                           cursor:pointer;transition:0.3s;background:rgba(59,130,246,0.03);gap:10px"
+                    style="min-height:220px;border:2px dashed rgba(59,130,246,0.3);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:0.3s;background:rgba(59,130,246,0.03);gap:12px"
                     ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
                     ondragleave="this.style.borderColor='rgba(59,130,246,0.3)'"
                     ondrop="handleImgDrop(event)">
-                    <div style="font-size:36px">🖼️</div>
-                    <div style="font-size:14px;font-weight:700;color:var(--text2)">Click hoặc kéo thả ảnh vào đây</div>
-                    <div style="font-size:12px;color:var(--text3)">JPG · PNG · WebP · GIF</div>
+                    <div style="width:52px;height:52px;border-radius:14px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center">
+                        <i class="fa-solid fa-image fa-lg" style="color:var(--accent)"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:14px;font-weight:700;color:var(--text2);text-align:center">Click hoặc kéo thả ảnh</div>
+                        <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:4px">JPG · PNG · WebP · GIF</div>
+                    </div>
                 </div>
                 <div id="img-preview-wrap" style="display:none;margin-top:10px;position:relative">
                     <img id="img-preview" style="width:100%;border-radius:12px;max-height:220px;object-fit:contain;background:rgba(0,0,0,0.2)">
-                    <button onclick="clearImgTrans()"
-                        style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:white;
-                               border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px">✕ Xoá</button>
+                    <button onclick="clearImgTrans()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px"><i class="fa-solid fa-xmark"></i> Xoá</button>
                 </div>
             </div>
 
-            <div class="quick-actions" id="trans-quick-chips">
-                <span class="chip" onclick="setTranslate('Hello, how are you today?')">Hello, how are you?</span>
-                <span class="chip" onclick="setTranslate('Could you elaborate on this?')">Could you elaborate?</span>
-                <span class="chip" onclick="setTranslate('The presentation is outstanding.')">Outstanding</span>
-                <span class="chip" onclick="clearTrans()">✕ Clear</span>
+            <div class="quick-actions" id="trans-quick-chips" style="margin-top:12px">
+                <span class="chip" onclick="setTranslate('Hello, how are you today?')"><i class="fa-solid fa-hand-wave" style="font-size:10px"></i> Chào hỏi</span>
+                <span class="chip" onclick="setTranslate('Dear Sir/Madam, I am writing to formally request...')"><i class="fa-solid fa-envelope" style="font-size:10px"></i> Email trang trọng</span>
+                <span class="chip" onclick="setTranslate('The quick brown fox jumps over the lazy dog')"><i class="fa-solid fa-font" style="font-size:10px"></i> Câu mẫu</span>
+                <span class="chip" onclick="clearTrans()"><i class="fa-solid fa-xmark" style="font-size:10px"></i> Xoá</span>
             </div>
         </div>
+
         <div class="trans-pane">
-            <div class="trans-lang" style="color:var(--green)"><i class="fa-solid fa-circle" style="color:var(--green);font-size:8px"></i> TRANSLATION & ANALYSIS</div>
-            <div id="trans-result" class="trans-result" style="min-height:200px;font-size:15px;line-height:1.8;color:var(--text2)">Translation will appear here as you type...</div>
-            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn sm ghost" onclick="speakResult()"><i class="fa-solid fa-volume-high"></i> Listen</button>
-                <button class="btn sm ghost" onclick="copyResult()"><i class="fa-solid fa-copy"></i> Copy</button>
-                <button class="btn sm ghost" onclick="saveToVocab()"><i class="fa-solid fa-bookmark"></i> Save to Vocab</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px">
+                    <i class="fa-solid fa-circle" style="color:var(--green);font-size:7px"></i> KẾT QUẢ DỊCH & PHÂN TÍCH
+                </div>
+            </div>
+            <div id="trans-result" class="trans-result" style="min-height:220px;font-size:14px;line-height:1.8;color:var(--text2)">Kết quả dịch sẽ hiển thị ở đây khi bạn nhập văn bản...</div>
+            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn sm ghost" onclick="speakResult()" style="display:flex;align-items:center;gap:5px">
+                    <i class="fa-solid fa-volume-high"></i> Nghe
+                </button>
+                <button class="btn sm ghost" onclick="copyResult()" style="display:flex;align-items:center;gap:5px">
+                    <i class="fa-solid fa-copy"></i> Sao chép
+                </button>
+                <button class="btn sm ghost" onclick="saveToVocab()" style="display:flex;align-items:center;gap:5px">
+                    <i class="fa-solid fa-bookmark"></i> Lưu từ vựng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Translation History Panel -->
+    <div class="card" style="margin-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="card-title" style="margin:0">
+                <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent)"></i> Lịch sử dịch
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn sm ghost" onclick="renderTransHistory()">
+                    <i class="fa-solid fa-rotate"></i> Làm mới
+                </button>
+                <button class="btn sm ghost" style="color:var(--red)" onclick="clearTransHistory()">
+                    <i class="fa-solid fa-trash"></i> Xóa lịch sử
+                </button>
+            </div>
+        </div>
+        <div id="trans-history-list" style="max-height:280px;overflow-y:auto">
+            <div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">
+                <i class="fa-solid fa-clock-rotate-left" style="margin-right:6px"></i>Chưa có lịch sử dịch.
             </div>
         </div>
     </div>
@@ -1189,65 +1235,104 @@ textarea.inp { resize: vertical; min-height: 100px; line-height: 1.6; }
     <div class="topbar">
         <div>
             <div class="page-title">AI Research <span>Coach</span></div>
-            <div class="page-sub">Smart AI assistant — gửi tin nhắn, hình ảnh, file, hoặc nói chuyện bằng giọng nói.</div>
+            <div class="page-sub">Trợ lý AI thông minh — chat, phân tích tài liệu, giải bài tập, nghiên cứu đa lĩnh vực.</div>
         </div>
-        <div class="ai-badge">AI Supper Support</div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <div style="display:flex;gap:6px">
+                <button class="btn sm ghost" onclick="quickChat('Tóm tắt cuộc hội thoại này và những điểm chính đã học')" title="Tóm tắt chat" style="font-size:11px;padding:5px 9px">
+                    <i class="fa-solid fa-list-check"></i>
+                </button>
+                <button class="btn sm ghost" onclick="exportChatHistory()" title="Xuất lịch sử chat" style="font-size:11px;padding:5px 9px">
+                    <i class="fa-solid fa-file-export"></i>
+                </button>
+            </div>
+            <div class="ai-badge">
+                <i class="fa-solid fa-robot" style="margin-right:4px;font-size:11px"></i>AI Research Coach
+            </div>
+        </div>
     </div>
 
     <div class="chat-wrapper">
-        <!-- Quick chips -->
-        <div class="context-chips">
-            <span class="ctx-chip" onclick="quickChat('Giải thích sự khác nhau giữa Present Perfect và Simple Past')">🎯 Present Perfect vs Past</span>
-            <span class="ctx-chip" onclick="quickChat('Explain the structure and usage of passive voice in English')">📝 Passive Voice</span>
-            <span class="ctx-chip" onclick="quickChat('Cho tôi 10 từ vựng IELTS band 7-8 với ví dụ')">📚 Vocab IELTS 7-8</span>
-            <span class="ctx-chip" onclick="quickChat('Give me Speaking Part 2 topic suggestions with sample answers')">🎤 Speaking Part 2</span>
-            <span class="ctx-chip" onclick="quickChat('Phân tích lỗi sai thường gặp trong IELTS Writing Task 2')">✍️ Writing Task 2</span>
+        <!-- Topic chips — horizontal scrollable -->
+        <div class="context-chips" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px">
+            <span class="ctx-chip" onclick="quickChat('Giải thích sự khác nhau giữa Present Perfect và Simple Past với ví dụ thực tế')">
+                <i class="fa-solid fa-book-open" style="font-size:10px"></i> Grammar
+            </span>
+            <span class="ctx-chip" onclick="quickChat('Cho tôi 10 từ vựng IELTS band 7-8 với phát âm IPA, nghĩa, và ví dụ câu')">
+                <i class="fa-solid fa-spell-check" style="font-size:10px"></i> Vocabulary
+            </span>
+            <span class="ctx-chip" onclick="quickChat('Give me a Speaking Part 2 topic and a full sample answer at band 7 level')">
+                <i class="fa-solid fa-microphone" style="font-size:10px"></i> Speaking
+            </span>
+            <span class="ctx-chip" onclick="quickChat('Tạo một bài Writing Task 2 về Technology và hướng dẫn outline chi tiết')">
+                <i class="fa-solid fa-pen-nib" style="font-size:10px"></i> Writing
+            </span>
+            <span class="ctx-chip" onclick="quickChat('Giải thích các chiến lược làm bài Reading IELTS để đạt band 7+')">
+                <i class="fa-solid fa-glasses" style="font-size:10px"></i> Reading
+            </span>
+            <span class="ctx-chip" onclick="quickChat('Phân tích email sau đây và giúp tôi viết lại theo phong cách chuyên nghiệp hơn')">
+                <i class="fa-solid fa-envelope" style="font-size:10px"></i> Business Email
+            </span>
+            <span class="ctx-chip" onclick="quickChat('Giải thích khái niệm này bằng tiếng Việt với ví dụ dễ hiểu')">
+                <i class="fa-solid fa-lightbulb" style="font-size:10px"></i> Giải thích
+            </span>
         </div>
 
         <!-- Messages -->
         <div id="chat-messages" class="chat-messages">
             <div class="msg">
-                <div class="avatar ai"><i class="fa-solid fa-microchip"></i></div>
-                <div class="bubble ai">Xin chào! Tôi là <strong>AI Supper Support</strong> — trợ lý học tiếng Anh toàn diện của bạn. 🎓<br><br>
-Bạn có thể:<br>
-• 💬 Gõ tin nhắn bất kỳ<br>
-• 🖼️ Gửi hình ảnh để AI phân tích<br>
-• 📎 Đính kèm file PDF/Word/TXT<br>
-• 🎤 Nhấn mic để nói chuyện bằng giọng nói<br><br>
-Ask me anything!</div>
+                <div class="avatar ai"><i class="fa-solid fa-microchip-ai" style="font-size:12px"></i></div>
+                <div class="bubble ai" style="max-width:460px">
+                    <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:var(--text)">
+                        <i class="fa-solid fa-robot" style="color:var(--accent);margin-right:6px"></i>Xin chào! Tôi là AI Research Coach
+                    </div>
+                    <div style="font-size:13px;color:var(--text2);line-height:1.6">
+                        Tôi có thể giúp bạn với:
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px">
+                            <div style="padding:5px 8px;background:rgba(59,130,246,0.08);border-radius:7px;font-size:12px"><i class="fa-solid fa-graduation-cap" style="color:var(--accent);margin-right:4px"></i>IELTS / TOEIC</div>
+                            <div style="padding:5px 8px;background:rgba(139,92,246,0.08);border-radius:7px;font-size:12px"><i class="fa-solid fa-file-lines" style="color:var(--accent2);margin-right:4px"></i>Phân tích tài liệu</div>
+                            <div style="padding:5px 8px;background:rgba(16,185,129,0.08);border-radius:7px;font-size:12px"><i class="fa-solid fa-language" style="color:var(--green);margin-right:4px"></i>Dịch thuật</div>
+                            <div style="padding:5px 8px;background:rgba(245,158,11,0.08);border-radius:7px;font-size:12px"><i class="fa-solid fa-magnifying-glass" style="color:var(--gold);margin-right:4px"></i>Nghiên cứu</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- ChatGPT-style input box -->
+        <!-- Input area -->
         <div style="position:relative">
             <!-- Plus popup menu -->
             <div class="chat-plus-menu" id="chat-plus-menu">
-                <input type="file" id="chat-file-input" multiple accept="image/*,.pdf,.docx,.txt" style="display:none" onchange="handleChatFileUpload(event)">
+                <input type="file" id="chat-file-input" multiple accept="image/*,.pdf,.docx,.txt,.md,.csv,.json" style="display:none" onchange="handleChatFileUpload(event)">
                 <button class="chat-menu-item" onclick="document.getElementById('chat-file-input').click();togglePlusMenu()">
                     <span class="mi-icon" style="background:rgba(59,130,246,0.12)"><i class="fa-solid fa-paperclip" style="color:var(--accent)"></i></span>
-                    Thêm ảnh và tệp
+                    <div><div style="font-weight:700;font-size:13px">Đính kèm tệp</div><div style="font-size:11px;color:var(--text3)">PDF, DOCX, TXT, ảnh...</div></div>
                 </button>
                 <button class="chat-menu-item" onclick="handleChatImagePaste();togglePlusMenu()">
-                    <span class="mi-icon" style="background:rgba(139,92,246,0.12)"><i class="fa-solid fa-image" style="color:var(--accent2)"></i></span>
-                    Dán ảnh từ clipboard
+                    <span class="mi-icon" style="background:rgba(139,92,246,0.12)"><i class="fa-solid fa-clipboard" style="color:var(--accent2)"></i></span>
+                    <div><div style="font-weight:700;font-size:13px">Dán từ clipboard</div><div style="font-size:11px;color:var(--text3)">Ctrl+V ảnh hoặc text</div></div>
                 </button>
                 <div class="chat-menu-sep"></div>
-                <button class="chat-menu-item" onclick="quickChat('Tôi muốn luyện Speaking IELTS Part 2. Hãy cho tôi một topic ngẫu nhiên.');togglePlusMenu()">
+                <button class="chat-menu-item" onclick="quickChat('Tôi muốn luyện Speaking IELTS Part 2. Hãy cho tôi một topic ngẫu nhiên và hướng dẫn trả lời.');togglePlusMenu()">
                     <span class="mi-icon" style="background:rgba(16,185,129,0.12)"><i class="fa-solid fa-microphone-lines" style="color:var(--green)"></i></span>
-                    Luyện Speaking IELTS
+                    <div><div style="font-weight:700;font-size:13px">Luyện Speaking</div><div style="font-size:11px;color:var(--text3)">IELTS Part 1, 2, 3</div></div>
                 </button>
-                <button class="chat-menu-item" onclick="quickChat('Hãy tạo một bài Writing Task 2 ngẫu nhiên và hướng dẫn tôi viết.');togglePlusMenu()">
+                <button class="chat-menu-item" onclick="quickChat('Hãy tạo một bài Writing Task 2 ngẫu nhiên về chủ đề xã hội và hướng dẫn tôi viết từng bước.');togglePlusMenu()">
                     <span class="mi-icon" style="background:rgba(245,158,11,0.12)"><i class="fa-solid fa-pen-nib" style="color:var(--gold)"></i></span>
-                    Writing Task 2
+                    <div><div style="font-weight:700;font-size:13px">Writing Task 2</div><div style="font-size:11px;color:var(--text3)">Tạo đề + hướng dẫn</div></div>
                 </button>
-                <button class="chat-menu-item" onclick="quickChat('Tìm kiếm và giải thích 10 từ vựng học thuật IELTS band 7-8 với ví dụ câu.');togglePlusMenu()">
-                    <span class="mi-icon" style="background:rgba(6,182,212,0.12)"><i class="fa-solid fa-magnifying-glass" style="color:var(--accent3)"></i></span>
-                    Tra từ & giải thích
+                <button class="chat-menu-item" onclick="quickChat('Hãy giải thích 10 từ vựng học thuật IELTS band 7-8 với IPA, ví dụ câu và cách dùng.');togglePlusMenu()">
+                    <span class="mi-icon" style="background:rgba(6,182,212,0.12)"><i class="fa-solid fa-book" style="color:var(--accent3)"></i></span>
+                    <div><div style="font-weight:700;font-size:13px">Từ vựng học thuật</div><div style="font-size:11px;color:var(--text3)">Band 7-8 với IPA</div></div>
+                </button>
+                <button class="chat-menu-item" onclick="quickChat('Phân tích và sửa lỗi ngữ pháp trong đoạn văn sau:');togglePlusMenu()">
+                    <span class="mi-icon" style="background:rgba(236,72,153,0.12)"><i class="fa-solid fa-spell-check" style="color:#ec4899"></i></span>
+                    <div><div style="font-weight:700;font-size:13px">Sửa ngữ pháp</div><div style="font-size:11px;color:var(--text3)">Grammar check & fix</div></div>
                 </button>
                 <div class="chat-menu-sep"></div>
                 <button class="chat-menu-item" onclick="clearChatHistory();togglePlusMenu()">
                     <span class="mi-icon" style="background:rgba(239,68,68,0.1)"><i class="fa-solid fa-trash-can" style="color:var(--red)"></i></span>
-                    Xoá lịch sử chat
+                    <div><div style="font-weight:700;font-size:13px">Xoá lịch sử</div><div style="font-size:11px;color:var(--text3)">Bắt đầu cuộc hội thoại mới</div></div>
                 </button>
             </div>
 
@@ -1259,33 +1344,25 @@ Ask me anything!</div>
                     <div class="voice-wave"><div class="voice-wave-fill" id="voice-level-bar"></div></div>
                     <span style="font-size:11px;color:var(--text3)">Nhấn mic để dừng</span>
                 </div>
-
                 <!-- Attachment chips -->
                 <div class="chat-attach-chips" id="chat-attach-preview" style="display:none"></div>
-
                 <!-- Text area -->
                 <textarea id="chat-input"
-                    placeholder="Hỏi bất kỳ điều gì..."
+                    placeholder="Hãy nhập câu hỏi vào đây....."
                     rows="1"
                     oninput="autoresizeChat(this)"
                     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
-
-                <!-- Bottom bar: + | ... | mic | send -->
+                <!-- Bottom bar -->
                 <div class="chat-input-bottom">
-                    <button class="chat-plus-btn" id="chat-plus-btn" onclick="togglePlusMenu()" title="Thêm tệp, ảnh, tính năng">
-                        +
+                    <button class="chat-plus-btn" id="chat-plus-btn" onclick="togglePlusMenu()" title="Thêm tệp, ảnh, tính năng" style="font-size:18px;font-weight:300">
+                        <i class="fa-solid fa-circle-plus" style="font-size:16px"></i>
                     </button>
-
-                    <div style="display:flex;align-items:center;gap:4px;flex:1;margin-left:8px">
-                        <!-- quick shortcuts visible inline -->
-                        <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;user-select:none">Enter ↵ gửi · Shift+Enter xuống dòng</span>
-                    </div>
-
-                    <button class="chat-mic-btn" id="mic-btn" onclick="toggleMic()" title="Nói chuyện bằng giọng nói">
+                    <div style="flex:1"></div>
+                    <button class="chat-mic-btn" id="mic-btn" onclick="toggleMic()" title="Ghi âm giọng nói">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    <button class="chat-send-btn" onclick="sendChat()" title="Gửi">
-                        <i class="fa-solid fa-arrow-up"></i>
+                    <button class="chat-send-btn" onclick="sendChat()" title="Gửi (Enter)">
+                        <i class="fa-solid fa-paper-plane" style="font-size:13px"></i>
                     </button>
                 </div>
             </div>

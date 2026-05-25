@@ -127,20 +127,71 @@ function autoTranslate() {
     transTimer = setTimeout(async () => {
         const out = document.getElementById('trans-result');
         out.innerHTML = '<span class="spinner"></span> Translating...';
-        const res = await callAI(
-            `Auto-detect the language and translate. If Vietnamese → translate to English. If English → translate to Vietnamese. If other language → translate to Vietnamese.\n\nAfter the translation, add a short analysis: difficult words, useful phrases, grammar notes (if any).\n\nText: "${val}"`,
-            'You are a professional translator. Translate accurately and naturally.'
-        );
+        const modeEl = document.getElementById('trans-mode');
+        const mode = modeEl ? modeEl.value : 'auto';
+        let sysPrompt = 'You are a professional translator. Translate accurately and naturally. Respond in well-structured format.';
+        let userPrompt = '';
+        const modeInstructions = {
+            auto: `Auto-detect language. Vietnamese→English, English→Vietnamese, other→Vietnamese. Add: difficult words, useful phrases, grammar notes.`,
+            formal: `Translate to formal/business register. Keep tone professional. Note formal vocabulary used.`,
+            casual: `Translate to casual/conversational style. Natural and friendly tone.`,
+            academic: `Translate with academic precision. Add terminology explanations and academic register notes.`,
+            technical: `Translate technical content accurately. Preserve technical terms, explain jargon.`,
+            creative: `Translate preserving literary style, metaphors, and creative elements.`
+        };
+        userPrompt = `${modeInstructions[mode] || modeInstructions.auto}\n\nText: "${val}"`;
+        const res = await callAI(userPrompt, sysPrompt);
         out.textContent = res;
         S.dailyCount++;
         sessionStorage.setItem('ass_daily', S.dailyCount);
         document.getElementById('daily-count').textContent = S.dailyCount;
         if (S.dailyCount % 5 === 1) logActivity('User translated text (session count: ' + S.dailyCount + ')', 'info');
+        // Save translation history to Firebase
+        try {
+            const user = getCurrentUser();
+            if (user) {
+                await fbPush(`trans_history/${user.id}`, {
+                    id: Date.now(), text: val.slice(0, 500),
+                    result: res.slice(0, 1000), mode: mode,
+                    at: new Date().toISOString()
+                });
+                renderTransHistory();
+            }
+        } catch(e) {}
     }, 600);
 }
 function setTranslate(t) { document.getElementById('trans-input').value = t; autoTranslate(); }
 
 function clearTrans() { document.getElementById('trans-input').value = ''; document.getElementById('trans-result').textContent = 'Translation will appear here as you type...'; }
+
+async function renderTransHistory() {
+    const el = document.getElementById('trans-history-list');
+    if (!el) return;
+    const user = getCurrentUser();
+    if (!user) return;
+    try {
+        const data = await fbGet(`trans_history/${user.id}`);
+        if (!data) { el.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Chưa có lịch sử dịch.</div>'; return; }
+        const list = Object.values(data).reverse().slice(0, 30);
+        const modeColor = { auto:'var(--accent)', formal:'var(--accent2)', casual:'var(--green)', academic:'var(--gold)', technical:'var(--red)', creative:'#ec4899' };
+        el.innerHTML = list.map(h => `
+            <div onclick="setTranslate(${JSON.stringify(h.text)})" style="padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:10px;cursor:pointer;transition:0.15s;margin-bottom:6px" onmouseover="this.style.background='rgba(59,130,246,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                    <span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;background:${modeColor[h.mode]||'var(--accent)'}22;color:${modeColor[h.mode]||'var(--accent)'};border:1px solid ${modeColor[h.mode]||'var(--accent)'}44">${h.mode||'auto'}</span>
+                    <span style="font-size:10px;color:var(--text3);margin-left:auto">${new Date(h.at).toLocaleString('vi-VN')}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.text}</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.result}</div>
+            </div>`).join('');
+    } catch(e) { el.innerHTML = '<div style="color:var(--red);font-size:12px;padding:10px">Lỗi tải lịch sử.</div>'; }
+}
+
+async function clearTransHistory() {
+    const user = getCurrentUser();
+    if (!user || !confirm('Xóa toàn bộ lịch sử dịch?')) return;
+    await fbSet(`trans_history/${user.id}`, null);
+    renderTransHistory();
+}
 
 // ─── TAB SWITCHER ───
 function switchTransTab(tab) {
@@ -315,20 +366,65 @@ async function aiGenerateVocab() {
 async function handleFileUpload(e) {
     const file = e.target.files[0]; if (!file) return;
     const out = document.getElementById('solver-view');
-    out.classList.remove('hidden'); out.innerHTML = '<span class="spinner"></span> Reading file...';
+    out.classList.remove('hidden');
+    out.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:16px;background:rgba(59,130,246,0.06);border-radius:10px;border:1px solid rgba(59,130,246,0.15)"><span class="spinner"></span><div><div style="font-weight:700;font-size:13px;color:var(--text)">Đang đọc file...</div><div style="font-size:11px;color:var(--text3)">${file.name} (${(file.size/1024).toFixed(1)} KB)</div></div></div>`;
     let text = '';
+    const ext = file.name.split('.').pop().toLowerCase();
     try {
-        if (file.name.endsWith('.docx')) { const res = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() }); text = res.value; }
-        else if (file.name.endsWith('.pdf')) {
+        if (ext === 'docx') {
+            const res = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+            text = res.value;
+        } else if (ext === 'pdf') {
             const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
-            for (let i = 1; i <= Math.min(pdf.numPages, 8); i++) { const pg = await pdf.getPage(i); const tc = await pg.getTextContent(); text += tc.items.map(t => t.str).join(' ') + '\n'; }
-        } else { text = await file.text(); }
-    } catch (err) { out.textContent = 'Cannot read file: ' + err.message; return; }
+            const maxPages = Math.min(pdf.numPages, 15);
+            for (let i = 1; i <= maxPages; i++) {
+                const pg = await pdf.getPage(i);
+                const tc = await pg.getTextContent();
+                text += tc.items.map(t => t.str).join(' ') + '\n';
+            }
+        } else if (['txt','md','csv','json','xml','html','js','py','cs'].includes(ext)) {
+            text = await file.text();
+        } else if (file.type.startsWith('image/')) {
+            // Handle image files — use vision
+            const data = await readFileAsBase64(file);
+            _chatAttachments.push({ type:'image', name:file.name, data, mimeType:file.type });
+            out.innerHTML = '<div style="padding:12px;color:var(--green);font-size:13px"><i class="fa-solid fa-check-circle"></i> Ảnh đã được thêm vào chat — hỏi AI về ảnh này!</div>';
+            renderChatAttachmentPreviews();
+            return;
+        } else {
+            text = await file.text().catch(() => '');
+            if (!text) { out.textContent = `Định dạng .${ext} chưa được hỗ trợ đọc trực tiếp. Hãy copy nội dung và dán vào chat.`; return; }
+        }
+    } catch (err) {
+        out.innerHTML = `<div style="padding:12px;color:var(--red);font-size:13px"><i class="fa-solid fa-triangle-exclamation"></i> Không đọc được file: ${err.message}</div>`;
+        return;
+    }
+    if (!text.trim()) { out.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px">File trống hoặc không có nội dung text.</div>'; return; }
     S.docText = text;
-    if (!S.files.find(f => f.name === file.name)) { S.files.push({ id: Date.now(), name: file.name, content: text, date: new Date().toLocaleDateString('vi-VN') }); save(); }
+    const fileIcon = { pdf:'fa-file-pdf', docx:'fa-file-word', txt:'fa-file-lines', md:'fa-file-code', csv:'fa-file-csv', json:'fa-file-code' };
+    if (!S.files.find(f => f.name === file.name)) {
+        S.files.push({ id: Date.now(), name: file.name, content: text, date: new Date().toLocaleDateString('vi-VN'), size: file.size, ext });
+        save();
+    }
     renderFiles();
-    out.innerHTML = '<span class="spinner"></span> AI đang phân tích...';
-    out.textContent = await callAI(`Analyze the following document:\n1. Summarize the main content\n2. Solve each exercise/question in detail\n3. Explain difficult vocabulary\n4. Note important grammar points\n\nDocument:\n${text.slice(0, 3500)}`, 'You are a professional English tutor.');
+    // Log to Firebase for admin tracking
+    try {
+        const user = getCurrentUser();
+        if (user) await fbPush(`user_actions/${user.id}`, { action:'file_upload', file:file.name, size:file.size, at:new Date().toISOString() });
+    } catch(e) {}
+    out.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:16px;background:rgba(16,185,129,0.06);border-radius:10px;border:1px solid rgba(16,185,129,0.15);margin-bottom:14px"><i class="fa-solid ${fileIcon[ext]||'fa-file'} fa-lg" style="color:var(--green)"></i><div><div style="font-weight:700;font-size:13px;color:var(--text)">${file.name}</div><div style="font-size:11px;color:var(--text3)">${(text.length/1000).toFixed(1)}K ký tự · ${pdf ? pdf.numPages+' trang' : ''}</div></div><span class="spinner" style="margin-left:auto"></span><span style="font-size:12px;color:var(--text3)">AI đang phân tích...</span></div>`;
+    const analysis = await callAI(
+        `Phân tích tài liệu sau một cách chi tiết và có cấu trúc:\n\n1. 📋 TÓM TẮT: Nội dung chính là gì?\n2. 🎯 CÁC ĐIỂM CHÍNH: Liệt kê 5-7 điểm quan trọng nhất\n3. 📝 BÀI TẬP/CÂU HỎI: Giải từng câu hỏi chi tiết (nếu có)\n4. 📚 TỪ VỰNG QUAN TRỌNG: Các từ/cụm từ khó cần chú ý\n5. 💡 GHI CHÚ: Điểm ngữ pháp hoặc kiến thức đáng lưu ý\n\nTài liệu:\n${text.slice(0, 4000)}`,
+        'You are a professional academic tutor and document analyst. Be thorough, structured, and educational.'
+    );
+    out.innerHTML = `<div style="padding:0">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(16,185,129,0.06);border-radius:10px;border:1px solid rgba(16,185,129,0.15);margin-bottom:14px">
+            <i class="fa-solid ${fileIcon[ext]||'fa-file'}" style="color:var(--green)"></i>
+            <span style="font-weight:700;font-size:13px;color:var(--text)">${file.name}</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:auto">${(text.length/1000).toFixed(1)}K ký tự</span>
+        </div>
+        <div style="white-space:pre-wrap;font-size:13px;line-height:1.7;color:var(--text)">${analysis}</div>
+    </div>`;
 }
 function renderFiles() {
     const box = document.getElementById('file-list');
@@ -1262,7 +1358,27 @@ async function sendChat() {
 
     const thinkId = appendThinking();
     let r;
-    const system = 'You are AI Supper Support — a comprehensive English learning assistant. Help solve exercises, explain concepts, analyze documents. Answer clearly with real examples. Use both English and Vietnamese when helpful.';
+    // Track what user does for admin visibility
+    try {
+        const user = getCurrentUser();
+        if (user) {
+            await fbPush(`user_actions/${user.id}`, {
+                action: 'chat', msg: (msg||'[file]').slice(0, 100),
+                hasAttachment: _chatAttachments.length > 0,
+                at: new Date().toISOString()
+            });
+        }
+    } catch(e) {}
+    const system = `You are AI Research Coach — an advanced AI assistant for learning, research, and productivity.
+Core capabilities:
+- 🎓 English learning: IELTS/TOEIC coaching, grammar, vocabulary, pronunciation
+- 📄 Document analysis: summarize, extract key points, solve exercises
+- 🔬 Research assistant: explain concepts, compare topics, cite examples
+- 💼 Business writing: emails, reports, presentations
+- 🌐 Translation: accurate, context-aware multilingual translation
+- 💡 Creative thinking: brainstorming, ideation, problem-solving
+
+Always respond in a clear, structured format. Use Vietnamese when the user writes in Vietnamese, English when they write in English. For exercises, show step-by-step solutions. Be encouraging and professional.`;
     
     if (attachments.length > 0) {
         r = await callAIWithVision(msg || 'Hãy phân tích và giải bài tập trong file/ảnh này. Giải thích từng bước.', system, attachments);
@@ -1410,6 +1526,27 @@ function clearChatHistory() {
     const box = document.getElementById('chat-messages');
     box.innerHTML = `<div class="msg"><div class="avatar ai"><i class="fa-solid fa-microchip"></i></div><div class="bubble ai">Chat đã được làm mới. Tôi sẵn sàng giúp bạn! 🎓<br><br>Bạn có thể gửi <strong>tin nhắn</strong>, <strong>ảnh</strong>, hoặc <strong>file</strong> để AI giải bài giúp bạn.</div></div>`;
 }
+function exportChatHistory() {
+    const msgs = document.querySelectorAll('#chat-messages .msg');
+    if (msgs.length <= 1) return alert('Chưa có cuộc hội thoại nào để xuất.');
+    let text = '=== AI Research Coach — Chat Export ===\n';
+    text += `Thời gian: ${new Date().toLocaleString('vi-VN')}\n\n`;
+    msgs.forEach(m => {
+        const isAI = m.classList.contains('ai') || m.querySelector('.bubble.ai');
+        const bubble = m.querySelector('.bubble');
+        if (bubble) {
+            const role = isAI || m.querySelector('.avatar.ai') ? 'AI Coach' : 'Bạn';
+            text += `[${role}]\n${bubble.textContent.trim()}\n\n`;
+        }
+    });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chat_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+}
+
+
 
 function formatMsgText(text) {
     return text
